@@ -10,9 +10,9 @@ info:
         email: xyz@campusnet.dev
 
 servers:
-    - url: http://localhost:3000/api/docs/v1
+    - url: http://localhost:3000/api/v1/
       description: Local server
-    - url: https://campusnet-api.onrender.com/api/docs/v1
+    - url: https://campusnet-api.onrender.com/api/v1/
       description: Production server
 
 tags:
@@ -229,7 +229,7 @@ components:
                 items:
                     type: string
                 maxItems: 5
-            example: [ "programming", "contest" ]
+            example: ["programming", "contest"]
 
     schemas:
         # ----------------------
@@ -296,14 +296,14 @@ components:
                     items:
                         type: object
                         properties:
-                        field:
-                            type: string
-                            description: The specific field that caused the validation error.
-                            example: "email"
-                        message:
-                            type: string
-                            description: A detailed message about the error on this field.
-                            example: "Email address is already in use."
+                            field:
+                                type: string
+                                description: The specific field that caused the validation error.
+                                example: "email"
+                            message:
+                                type: string
+                                description: A detailed message about the error on this field.
+                                example: "Email address is already in use."
                     nullable: true # Details might not always be present
                     example:
                         - field: "password"
@@ -868,7 +868,7 @@ components:
                     type: string
                     minLength: 1
                     maxLength: 50
-                    pattern: '^[a-zA-Z0-9-#]+$' # Allow letters, numbers, hyphens, hash
+                    pattern: "^[a-zA-Z0-9-#]+$" # Allow letters, numbers, hyphens, hash
                     description: The tag name. Should be unique (case-insensitive).
                     example: "artificial-intelligence"
                 createdAt:
@@ -890,7 +890,7 @@ components:
                     readOnly: true
                     example: "523e4567-e89b-12d3-a456-426614174000"
                 author:
-                    $ref: '#/components/schemas/User'
+                    $ref: "#/components/schemas/User"
                 communityId:
                     type: string
                     format: uuid
@@ -931,12 +931,12 @@ components:
                 tags:
                     type: array
                     items:
-                        $ref: '#/components/schemas/Tag'
+                        $ref: "#/components/schemas/Tag"
                     maxItems: 10
                     nullable: true
                     description: Tags associated with the post for categorization and discovery.
                 status:
-                    $ref: '#/components/schemas/PostStatusEnum'
+                    $ref: "#/components/schemas/PostStatusEnum"
                 isPublic:
                     type: boolean
                     description: If true, this post might be visible across different campuses (inter-university feed), subject to system configuration.
@@ -997,7 +997,7 @@ components:
                     readOnly: true
                     example: "evt_623e4567-e89b-12d3-a456-426614174000"
                 organizer:
-                    $ref: '#/components/schemas/User'
+                    $ref: "#/components/schemas/User"
                 communityId:
                     type: string
                     format: uuid
@@ -1065,11 +1065,11 @@ components:
                 tags:
                     type: array
                     items:
-                        $ref: '#/components/schemas/Tag'
+                        $ref: "#/components/schemas/Tag"
                     maxItems: 10
                     nullable: true
                 status:
-                    $ref: '#/components/schemas/EventStatusEnum'
+                    $ref: "#/components/schemas/EventStatusEnum"
                 isPublic:
                     type: boolean
                     description: If true, this event might be visible across campuses or to the public, depending on system settings.
@@ -1118,14 +1118,14 @@ components:
             description: Represents a user's attendance status for an event.
             properties:
                 user:
-                    $ref: '#/components/schemas/User'
+                    $ref: "#/components/schemas/User"
                 eventId:
                     type: string
                     format: uuid
                     example: "evt_623e4567-e89b-12d3-a456-426614174000"
                 status:
                     type: string
-                    enum: [ attending, interested ]
+                    enum: [attending, interested]
                     description: User's RSVP status for the event.
                     example: "attending"
                 joinedAt:
@@ -1181,7 +1181,7 @@ components:
                     readOnly: true
                     example: "723e4567-e89b-12d3-a456-426614174000"
                 creator:
-                    $ref: '#/components/schemas/User'
+                    $ref: "#/components/schemas/User"
                 communityId:
                     type: string
                     format: uuid
@@ -1206,9 +1206,9 @@ components:
                 options:
                     type: array
                     items:
-                        $ref: '#/components/schemas/PollOption'
+                        $ref: "#/components/schemas/PollOption"
                     minItems: 2
-                    maxItems: 10 
+                    maxItems: 10
                     description: List of options users can vote for.
                 deadline:
                     type: string
@@ -1230,7 +1230,7 @@ components:
                     default: false
                     example: true
                 status:
-                    $ref: '#/components/schemas/PostStatusEnum'
+                    $ref: "#/components/schemas/PostStatusEnum"
                     description: Approval status if polls require moderation.
                 totalVotes:
                     type: integer
@@ -1255,7 +1255,7 @@ components:
                 - options
                 - status
                 - createdAt
-        
+
         PollVote:
             type: object
             description: Records a user's vote on a specific poll option.
@@ -1293,7 +1293,7 @@ components:
                 - userId
                 - pollOptionId
                 - votedAt
-        
+
         Comment:
             type: object
             description: Represents a comment made by a user on a post or event.
@@ -1305,7 +1305,7 @@ components:
                     description: Unique identifier for the comment.
                     example: "823e4567-e89b-12d3-a456-426614174000"
                 author:
-                    $ref: '#/components/schemas/User' 
+                    $ref: "#/components/schemas/User"
                 postId:
                     type: string
                     format: uuid
@@ -1327,10 +1327,10 @@ components:
                 content:
                     type: string
                     minLength: 1
-                    maxLength: 2000 
+                    maxLength: 2000
                     description: The textual content of the comment. Can support limited markdown.
                     example: "Great post! I totally agree with your points."
-                likeCount: 
+                likeCount:
                     type: integer
                     minimum: 0
                     default: 0
@@ -1339,7 +1339,7 @@ components:
                 replies:
                     type: array
                     items:
-                        $ref: '#/components/schemas/Comment' 
+                        $ref: "#/components/schemas/Comment"
                     nullable: true
                     description: A list of replies to this comment.
                     readOnly: true # Replies are typically fetched as part of the comment or via a separate endpoint
@@ -1360,44 +1360,43 @@ components:
                 - createdAt
                 # postId or eventId should be conditionally required based on context,
                 # but OpenAPI doesn't easily support this. Backend validation is key.
-        
+
         Reaction:
-        type: object
-        description: Represents a reaction (e.g., like, love) from a user to a post or comment.
-        properties:
-            id:
-                type: string
-                format: uuid
-                readOnly: true
-                description: Unique identifier for the reaction.
-                example: "def456a1-e89b-12d3-a456-426614174000"
-            user:
-                $ref: '#/components/schemas/User'
-            postId:
-                type: string
-                format: uuid
-                nullable: true
-                description: Identifier of the post being reacted to (if applicable).
-                example: "pst_523e4567-e89b-12d3-a456-426614174000"
-            commentId:
-                type: string
-                format: uuid
-                nullable: true
-                description: Identifier of the comment being reacted to (if applicable).
-                example: "cmt_823e4567-e89b-12d3-a456-426614174000"
-            reactionType:
-                $ref: '#/components/schemas/ReactionTypeEnum'
-            createdAt:
-                type: string
-                format: date-time
-                readOnly: true
-                example: "2024-02-15T15:10:00Z"
-        required:
-            - id
-            - user
-            - reactionType
-            - createdAt
-            # postId or commentId should be conditionally required.
+            type: object
+            description: Represents a reaction (e.g., like, love) from a user to a post or comment.
+            properties:
+                id:
+                    type: string
+                    format: uuid
+                    readOnly: true
+                    description: Unique identifier for the reaction.
+                    example: "def456a1-e89b-12d3-a456-426614174000"
+                user:
+                    $ref: "#/components/schemas/User"
+                postId:
+                    type: string
+                    format: uuid
+                    nullable: true
+                    description: Identifier of the post being reacted to (if applicable).
+                    example: "pst_523e4567-e89b-12d3-a456-426614174000"
+                commentId:
+                    type: string
+                    format: uuid
+                    nullable: true
+                    description: Identifier of the comment being reacted to (if applicable).
+                    example: "cmt_823e4567-e89b-12d3-a456-426614174000"
+                reactionType:
+                    $ref: "#/components/schemas/ReactionTypeEnum"
+                createdAt:
+                    type: string
+                    format: date-time
+                    readOnly: true
+                    example: "2024-02-15T15:10:00Z"
+            required:
+                - id
+                - user
+                - reactionType
+                - createdAt
 
         UserConnection:
             type: object
@@ -1410,11 +1409,11 @@ components:
                     description: Unique identifier for the connection record.
                     example: "con_f1e2d3c4-b89b-12d3-a456-426614174000"
                 requester: # User who initiated the connection
-                    $ref: '#/components/schemas/User'
+                    $ref: "#/components/schemas/User"
                 recipient: # User who received the connection request
-                    $ref: '#/components/schemas/User'
+                    $ref: "#/components/schemas/User"
                 status:
-                    $ref: '#/components/schemas/ConnectionStatusEnum'
+                    $ref: "#/components/schemas/ConnectionStatusEnum"
                 requestedAt: # When the request was made
                     type: string
                     format: date-time
@@ -1445,9 +1444,9 @@ components:
                     description: Unique identifier for the message.
                     example: "msg_c4d3e2b1-a89b-12d3-a456-426614174000"
                 sender:
-                    $ref: '#/components/schemas/User' # User who sent the message
+                    $ref: "#/components/schemas/User" # User who sent the message
                 recipient:
-                    $ref: '#/components/schemas/User' # User who received the message
+                    $ref: "#/components/schemas/User" # User who received the message
                 content:
                     type: string
                     minLength: 1
@@ -1459,7 +1458,7 @@ components:
                     default: false
                     description: Indicates if the recipient has read the message.
                     example: false
-                sentAt: 
+                sentAt:
                     type: string
                     format: date-time
                     readOnly: true
@@ -1471,7 +1470,7 @@ components:
                 - recipient
                 - content
                 - sentAt
-        
+
         Conversation:
             type: object
             description: Represents a summary of a direct message conversation with another user.
@@ -1482,10 +1481,10 @@ components:
                     readOnly: true
                     description: Unique identifier for the conversation.
                     example: "c4d3e2b1-a89b-12d3-a456-426614174000"
-                withUser: 
-                    $ref: '#/components/schemas/User'
+                withUser:
+                    $ref: "#/components/schemas/User"
                 lastMessage:
-                    $ref: '#/components/schemas/Message' # The most recent message in the conversation
+                    $ref: "#/components/schemas/Message" # The most recent message in the conversation
                     nullable: true # Could be a new conversation with no messages yet
                 unreadCount:
                     type: integer
@@ -1519,15 +1518,15 @@ components:
                     readOnly: true
                     description: Unique identifier for the notification.
                     example: "923e4567-e89b-12d3-a456-426614174000"
-                userId: 
+                userId:
                     type: string
                     format: uuid
                     description: Identifier of the user who is the recipient of this notification.
                     example: "123e4567-e89b-12d3-a456-426614174000"
                 type:
-                    $ref: '#/components/schemas/NotificationTypeEnum'
+                    $ref: "#/components/schemas/NotificationTypeEnum"
                 sender: # User who triggered the notification, if applicable
-                    $ref: '#/components/schemas/User'
+                    $ref: "#/components/schemas/User"
                     nullable: true # Some notifications might be system-generated
                 content:
                     type: string
@@ -1541,7 +1540,7 @@ components:
                     description: Identifier of the entity this notification is related to (e.g., post ID, event ID, user ID of sender).
                     example: "523e4567-e89b-12d3-a456-426614174000"
                 relatedEntityType:
-                    $ref: '#/components/schemas/RelatedEntityTypeName'
+                    $ref: "#/components/schemas/RelatedEntityTypeName"
                     nullable: true
                 isRead:
                     type: boolean
@@ -1561,7 +1560,7 @@ components:
                 - content
                 - relatedEntityId
                 - relatedEntityType
-        
+
         PaginationMetadata:
             type: object
             description: Metadata for paginated API responses.
@@ -1607,15 +1606,12 @@ components:
                     example: "Operation completed successfully."
                 data: # Changed to object as per user's example for AuthToken response
                     type: object
-                    example: {
-                        id: "res_some_resource_id",
-                        status: "updated"
-                    }
+                    example: { id: "res_some_resource_id", status: "updated" }
             required:
                 - message
                 - data
 
-        AuthToken: 
+        AuthToken:
             type: object
             description: Represents the JWT access and refresh tokens.
             properties:
@@ -1640,15 +1636,15 @@ components:
                 - accessToken
                 - expiresIn
                 - tokenType
-                
+
         AuthenticatedUserResponse: # For login/register responses
             type: object
             description: Response payload after successful authentication or registration.
             properties:
                 tokens:
-                    $ref: '#/components/schemas/AuthToken'
+                    $ref: "#/components/schemas/AuthToken"
                 user:
-                    $ref: '#/components/schemas/User'
+                    $ref: "#/components/schemas/User"
             required:
                 - tokens
                 - user
@@ -1673,7 +1669,7 @@ components:
                     type: string
                     minLength: 3
                     maxLength: 30
-                    pattern: '^[a-zA-Z0-9_.-]+$'
+                    pattern: "^[a-zA-Z0-9_.-]+$"
                     description: Desired unique username.
                     example: "sarah.connor88"
                 email:
@@ -2391,13 +2387,7 @@ components:
                         $ref: "#/components/schemas/SuccessMessageResponse"
                     example:
                         message: "Logged in successfully"
-                        data: [
-                            {
-                                "accessToken" : "token"
-                            }
-                        ]
-
-
+                        data: [{ "accessToken": "token" }]
 
 # Paths will be extensive. Starting with Authentication.
 paths:
@@ -2905,7 +2895,7 @@ paths:
                 - Universities
             summary: Get a list of all universities
             parameters:
-                - $ref: "#/components/parameters/pageParem"
+                - $ref: "#/components/parameters/pageParam"
                 - $ref: "#/components/parameters/limitParam"
                 - $ref: "#/components/parameters/searchQueryParam"
             responses:
@@ -3139,15 +3129,15 @@ paths:
 
     /communities/{communityId}/members:
         parameters:
-            - $ref: "#/components/parameters/CommunityIdParam"
+            - $ref: "#/components/parameters/communityIdParam"
         get:
             tags:
                 - Communities
             summary: Get a list of members in a community
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
-                - $ref: "#/components/parameters/SearchQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+                - $ref: "#/components/parameters/searchQueryParam"
                 - name: role
                   in: query
                   schema:
@@ -3186,8 +3176,8 @@ paths:
 
     /communities/{communityId}/members/{userId}:
         parameters:
-            - $ref: "#/components/parameters/CommunityIdParam"
-            - $ref: "#/components/parameters/UserIdParam"
+            - $ref: "#/components/parameters/communityIdParam"
+            - $ref: "#/components/parameters/userIdParam"
         put:
             tags:
                 - Communities
@@ -3234,15 +3224,15 @@ paths:
     # --- Groups ---
     /communities/{communityId}/groups:
         parameters:
-            - $ref: "#/components/parameters/CommunityIdParam"
+            - $ref: "#/components/parameters/communityIdParam"
         get:
             tags:
                 - Groups
             summary: Get all groups within a specific community
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
-                - $ref: "#/components/parameters/SearchQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+                - $ref: "#/components/parameters/searchQueryParam"
                 - name: isPublic
                   in: query
                   schema:
@@ -3288,7 +3278,7 @@ paths:
 
     /groups/{groupId}:
         parameters:
-            - $ref: "#/components/parameters/GroupIdParam"
+            - $ref: "#/components/parameters/groupIdParam"
         get:
             tags:
                 - Groups
@@ -3351,10 +3341,10 @@ paths:
                 - Groups
             summary: Get all public groups across all communities
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
-                - $ref: "#/components/parameters/SearchQueryParam"
-                - $ref: "#/components/parameters/TagQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+                - $ref: "#/components/parameters/searchQueryParam"
+                - $ref: "#/components/parameters/tagQueryParam"
             responses:
                 "200":
                     description: A list of public groups.
@@ -3367,15 +3357,15 @@ paths:
 
     /groups/{groupId}/members:
         parameters:
-            - $ref: "#/components/parameters/GroupIdParam"
+            - $ref: "#/components/parameters/groupIdParam"
         get:
             tags:
                 - Groups
             summary: Get a list of members in a group
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
-                - $ref: "#/components/parameters/SearchQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+                - $ref: "#/components/parameters/searchQueryParam"
                 - name: role
                   in: query
                   schema:
@@ -3421,8 +3411,8 @@ paths:
 
     /groups/{groupId}/members/{userId}:
         parameters:
-            - $ref: "#/components/parameters/GroupIdParam"
-            - $ref: "#/components/parameters/UserIdParam"
+            - $ref: "#/components/parameters/groupIdParam"
+            - $ref: "#/components/parameters/userIdParam"
         put:
             tags:
                 - Groups
@@ -3468,7 +3458,7 @@ paths:
 
     /groups/{groupId}/member-requests:
         parameters:
-            - $ref: "#/components/parameters/GroupIdParam"
+            - $ref: "#/components/parameters/groupIdParam"
         get:
             tags:
                 - Groups
@@ -3493,8 +3483,8 @@ paths:
 
     /groups/{groupId}/member-requests/{userId}/approve:
         parameters:
-            - $ref: "#/components/parameters/GroupIdParam"
-            - $ref: "#/components/parameters/UserIdParam"
+            - $ref: "#/components/parameters/groupIdParam"
+            - $ref: "#/components/parameters/userIdParam"
         post:
             tags:
                 - Groups
@@ -3517,8 +3507,8 @@ paths:
 
     /groups/{groupId}/member-requests/{userId}/reject:
         parameters:
-            - $ref: "#/components/parameters/GroupIdParam"
-            - $ref: "#/components/parameters/UserIdParam"
+            - $ref: "#/components/parameters/groupIdParam"
+            - $ref: "#/components/parameters/userIdParam"
         post:
             tags:
                 - Groups
@@ -3546,8 +3536,8 @@ paths:
                 - Posts
             summary: Get a feed of posts
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
                 - name: communityId
                   in: query
                   schema:
@@ -3567,7 +3557,7 @@ paths:
                   in: query
                   schema:
                       type: boolean
-                - $ref: "#/components/parameters/TagQueryParam"
+                - $ref: "#/components/parameters/tagQueryParam"
                 - name: status
                   in: query
                   schema:
@@ -3765,8 +3755,8 @@ paths:
                 - Comments
             summary: Get comments for a post
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
                 - name: sortBy
                   in: query
                   schema:
@@ -3813,7 +3803,7 @@ paths:
 
     /comments/{commentId}:
         parameters:
-            - $ref: "#/components/parameters/CommentIdParam"
+            - $ref: "#/components/parameters/commentIdParam"
         put:
             tags:
                 - Comments
@@ -3983,7 +3973,7 @@ paths:
 
     /connections/requests/{requestId}/accept:
         parameters:
-            - $ref: "#/components/parameters/ConnectionRequestIdParam"
+            - $ref: "#/components/parameters/connectionRequestIdParam"
         post:
             tags:
                 - Connections
@@ -4006,7 +3996,7 @@ paths:
 
     /connections/requests/{requestId}/reject:
         parameters:
-            - $ref: "#/components/parameters/ConnectionRequestIdParam"
+            - $ref: "#/components/parameters/connectionRequestIdParam"
         post:
             tags:
                 - Connections
@@ -4035,9 +4025,9 @@ paths:
             security:
                 - bearerAuth: []
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
-                - $ref: "#/components/parameters/SearchQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+                - $ref: "#/components/parameters/searchQueryParam"
             responses:
                 "200":
                     description: List of connected users.
@@ -4052,7 +4042,7 @@ paths:
 
     /connections/{userId}: # To remove a connection
         parameters:
-            - $ref: "#/components/parameters/UserIdParam"
+            - $ref: "#/components/parameters/userIdParam"
         delete:
             tags:
                 - Connections
@@ -4097,7 +4087,7 @@ paths:
 
     /messages/chat/{userId}:
         parameters:
-            - $ref: "#/components/parameters/UserIdParam"
+            - $ref: "#/components/parameters/userIdParam"
         get:
             tags:
                 - Messages
@@ -4109,7 +4099,7 @@ paths:
                   in: query
                   schema:
                       type: string
-                - $ref: "#/components/parameters/LimitParam"
+                - $ref: "#/components/parameters/limitParam"
             responses:
                 "200":
                     description: Chat history.
@@ -4132,8 +4122,8 @@ paths:
             security:
                 - bearerAuth: []
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
             responses:
                 "200":
                     description: List of conversations.
@@ -4155,8 +4145,8 @@ paths:
             security:
                 - bearerAuth: []
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
                 - name: isRead
                   in: query
                   schema:
@@ -4175,7 +4165,7 @@ paths:
 
     /notifications/{notificationId}/read:
         parameters:
-            - $ref: "#/components/parameters/NotificationIdParam"
+            - $ref: "#/components/parameters/notificationIdParam"
         post:
             tags:
                 - Notifications
@@ -4203,7 +4193,7 @@ paths:
                 - bearerAuth: []
             responses:
                 "200":
-                    $ref: "#/components/responses/SuccessMessage"
+                    $ref: "#/components/responses/SuccessMessageResponse"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
 
@@ -4214,9 +4204,9 @@ paths:
                 - Tags
             summary: Get a list of all tags
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
-                - $ref: "#/components/parameters/SearchQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+                - $ref: "#/components/parameters/searchQueryParam"
             responses:
                 "200":
                     description: A list of tags.
@@ -4276,9 +4266,9 @@ paths:
                   schema:
                       type: string
                       format: uuid
-                - $ref: "#/components/parameters/TagsQueryParam"
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
+                - $ref: "#/components/parameters/tagsQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
             responses:
                 "200":
                     description: Search results.

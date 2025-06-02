@@ -9,11 +9,14 @@ dotenv.config();
 
 // Swagger Documentation UI Setup
 const swaggerUi = require("swagger-ui-express");
-const fs = require('fs');
+const fs = require("fs");
 const YAML = require("yaml");
 const path = require("path");
 
-const file = fs.readFileSync(path.join(__dirname, 'docs', 'openapi.yaml'), 'utf8');
+const file = fs.readFileSync(
+    path.join(__dirname, "docs", "openapi.yaml"),
+    "utf8",
+);
 const openapiDocumentation = YAML.parse(file);
 
 const globalLimiter = rateLimit({
@@ -25,7 +28,7 @@ const globalLimiter = rateLimit({
 });
 
 // Import routes from routes folder
-const authRoutes = require("./routes/authRoutes");
+const { authRoutes } = require("./routes/authRoutes");
 
 // Initialize express
 const app = express();
@@ -39,23 +42,14 @@ app.use(cookieParser());
 app.use(globalLimiter);
 
 // API endpoints will be added here
-app.use("/", () => {
-    return "Server is running!";
+app.get("/", (req, res) => {
+    return res.status(200).json({ message: "Server is running!" });
 });
 
 app.use("/api/v1/auth", authRoutes);
 
 // Swagger API docs route
-app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openapiDocumentation));
+app.use("/api/v1/docs", swaggerUi.serve, swaggerUi.setup(openapiDocumentation));
 
-// 404 handler
-app.use('*', (req, res) => {
-    return res.status(404).json({
-        code: 404,
-        name: "not_found_error",
-        message: "Route not found",
-        timestamp: new Date().toISOString()
-    })
-});
 
 module.exports = app;

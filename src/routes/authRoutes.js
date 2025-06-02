@@ -10,25 +10,25 @@ const {
     refreshToken,
     logout
 } = require('../controllers/authController');
-
-const { authenticateToken } = require('../middlewares/authMiddleware');
+const { authMiddleware } = require('../middlewares/authMiddleware');
 
 router.post('/register', register);
 
 router.post('/login', login);
 
-router.post('/verify-email?token', verifyEmail);
+router.get('/verify-email', verifyEmail);
 
 router.post('/resend-verification-email', resendVerificationEmail);
 
 router.post('/forgot-password', forgotPassword);
 
-router.post('/reset-password?token', resetPassword);
+router.post('/reset-password', resetPassword);
 
-router.post('/refresh-token', refreshToken, authenticateToken);
+router.post('/refresh-token', authMiddleware, refreshToken);
 
-router.post('/logout', logout, authenticateToken);
+router.post('/logout', authMiddleware, logout);
 
 
-
-module.exports = router;
+module.exports = {
+    authRoutes: router
+};
