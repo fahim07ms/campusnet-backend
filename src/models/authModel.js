@@ -1,6 +1,10 @@
 // Find a University by its domain
 export const findUniversityByDomain = async (client, domain) => {
-    const query = "SELECT * FROM universities WHERE $1=ANY(domains)";
+    const query = 'SELECT * FROM universities WHERE EXISTS (' +
+        'SELECT 1 ' +
+        'FROM unnest(domains) AS domain_suffix ' +
+        'WHERE $1 LIKE \'%\' || domain_suffix' +
+        ');';
     const result = await client.query(query, [domain]);
     return result.rows[0] || null;
 };
@@ -13,13 +17,14 @@ export const findUserByEmail = async (client, email) => {
 };
 
 // Find active user by its id
-const findActiveUserById = (client, userId) => {
+export const findActiveUserById = async (client, userId) => {
     const query = "SELECT * FROM users WHERE id = $1 AND is_active = true";
-    return client.query(query, [userId]);
+    const result = await client.query(query, [userId]);
+    return result.rows[0] || null;
 };
 
 // Create a user and its initial profile
-const createUser = async (
+export const createUser = async (
     client,
     {
         email,
@@ -58,8 +63,7 @@ export const getUserProfileById = async (client, userId) => {
 
 // Update user's last login
 export const updateLastLogin = async (client, userId) => {
-    const query =
-        "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1";
+    const query = "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1";
     await client.query(query, [userId]);
 };
 
@@ -102,7 +106,7 @@ export const userDataFromId = async (client, userId) => {
 };
 
 // Insert refresh token
-const insertRefreshToken = async (
+export const insertRefreshToken = async (
     client,
     userId,
     tokenHash,
@@ -131,7 +135,7 @@ export const findUserByVerificationToken = async (client, token) => {
 };
 
 // Update user verification token and is_verified status
-const updateUserVerificationToken = async (
+export const updateUserVerificationToken = async (
     client,
     userId,
     is_verified,
@@ -143,7 +147,7 @@ const updateUserVerificationToken = async (
 };
 
 // Update user password reset token and expiry time
-const updatePasswordResetToken = async (
+export const updatePasswordResetToken = async (
     client,
     userId,
     resetToken,
@@ -174,6 +178,11 @@ export const invalidateRefreshToken = async (client, userId) => {
     const query =
         "UPDATE refresh_tokens SET is_active = false WHERE user_id = $1";
     await client.query(query, [userId]);
+};
+
+export const invalidateRefreshTokenByTokenHash = async (client, tokenHash) => {
+    const query = "UPDATE refresh_tokens SET is_active = false WHERE token_hash = $1";
+    await client.query(query, [tokenHash]);
 };
 
 // Find refresh token by its token hash and user id

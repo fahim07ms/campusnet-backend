@@ -25,23 +25,7 @@ const {
 
 // Error Function Utility
 const customError = require("../utils/errors");
-
-// Rate Limiting Configurations
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5,
-    message: {
-        error: "Too many login attempts, please try again after an hour",
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: { error: "Too many requests, please try again after an hour" },
-});
+const {findUserByEmail, findRefreshTokenByTokenHash} = require("../models/authModel");
 
 /***************************
  * Authentication Controllers
@@ -49,7 +33,7 @@ const generalLimiter = rateLimit({
 
 // Register
 const register = async (req, res) => {
-    const { client } = await pool.connect();
+    const client = await pool.connect();
 
     try {
         const {
@@ -98,10 +82,12 @@ const register = async (req, res) => {
         await client.query("BEGIN");
         // Extract domain from email and validate if university is present or not
         const universityDomain = email.split("@")[1];
+
         const university = await AuthModel.findUniversityByDomain(
             client,
             universityDomain,
         );
+        console.log(university);
         if (!university) {
             await client.query("ROLLBACK");
             return res.status(404).json(
@@ -129,7 +115,7 @@ const register = async (req, res) => {
         const verificationToken = generateRandomToken();
 
         // Create User
-        const userId = await AuthModel.createUser(client, {
+        const user = await AuthModel.createUser(client, {
             email,
             username,
             firstName,
@@ -139,11 +125,10 @@ const register = async (req, res) => {
             universityId: university.id,
         });
 
-        await client.query("COMMIT");
-
         // Send verification email
         await sendVerificationEmail(email, verificationToken, firstName);
 
+        await client.query("COMMIT");
         res.status(201).json({
             message:
                 "Registration successful. Please check your email for verification.",
@@ -154,9 +139,12 @@ const register = async (req, res) => {
     } catch (error) {
         await client.query("ROLLBACK");
         console.error("Registration failed with error: ", error);
-        res.status(500).json(
+        return res.status(500).json(
             customError.internalServerError({
                 message: "Registration failed",
+                details: {
+                    error: error.message
+                }
             }),
         );
     } finally {
@@ -166,7 +154,7 @@ const register = async (req, res) => {
 
 // Login Controller
 const login = async (req, res) => {
-    const { client } = await pool.connect();
+    const client = await pool.connect();
 
     try {
         const { email, password } = req.body;
@@ -174,12 +162,10 @@ const login = async (req, res) => {
             return res.status(400).json(
                 customError.badRequest({
                     message: "Request validation failed for 1 field",
-                    details: [
-                        {
-                            field: "email",
-                            message: "Email field is required",
-                        },
-                    ],
+                    details: {
+                        field: "email",
+                        message: "Email field is required",
+                    },
                 }),
             );
         }
@@ -187,12 +173,10 @@ const login = async (req, res) => {
             return res.status(400).json(
                 customError.badRequest({
                     message: "Request validation failed for 1 field",
-                    details: [
-                        {
-                            field: "password",
-                            message: "Password field is required",
-                        },
-                    ],
+                    details: {
+                        field: "password",
+                        message: "Password field is required",
+                    },
                 }),
             );
         }
@@ -222,7 +206,7 @@ const login = async (req, res) => {
         }
 
         // Check if email is verified
-        if (!email.is_verified) {
+        if (!user.is_verified) {
             return res.status(403).json(
                 customError.forbidden({
                     message: "Please verify your email before logging in.",
@@ -237,7 +221,7 @@ const login = async (req, res) => {
         // Store hashed refresh token in the database
         const refreshTokenHash = hashToken(refreshToken);
         const expiresAt = new Date(
-            Date.now() + process.env.REFRESH_TOKEN_EXPIRY,
+            Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
         );
 
         await client.query(`BEGIN`);
@@ -255,18 +239,18 @@ const login = async (req, res) => {
         const userProfile = await AuthModel.getUserProfileById(client, user.id);
 
         // Update last login
-        await AuthModel.updateLastLogin();
+        await AuthModel.updateLastLogin(client, user.id);
 
         // Update user is_active to true
         await AuthModel.updateUserIsActive(client, user.id, true);
 
         // Return user data
-        const userData = await AuthModel.userDataFromId();
+        const userData = await AuthModel.userDataFromId(client, user.id);
+
+        res.cookie("refreshToken", refreshToken);
 
         await client.query("COMMIT");
-        req.cookies("refreshToken", refreshToken);
-
-        res.status(201).json({
+        res.status(200).json({
             message: "Login successful",
             data: {
                 accessToken,
@@ -279,6 +263,9 @@ const login = async (req, res) => {
         res.status(500).json(
             customError.internalServerError({
                 message: "Login failed",
+                data: {
+                    error: error.message,
+                }
             }),
         );
     } finally {
@@ -288,7 +275,7 @@ const login = async (req, res) => {
 
 // Verify Email
 const verifyEmail = async (req, res) => {
-    const { client } = await pool.connect();
+    const client = await pool.connect();
 
     try {
         const { token } = req.query;
@@ -329,6 +316,9 @@ const verifyEmail = async (req, res) => {
         res.status(500).json(
             customError.internalServerError({
                 message: "Verification failed",
+                details: {
+                    error: error.message
+                }
             }),
         );
     } finally {
@@ -338,7 +328,7 @@ const verifyEmail = async (req, res) => {
 
 // Resend Verification Email
 const resendVerificationEmail = async (req, res) => {
-    const { client } = await pool.connect();
+    const client = await pool.connect();
 
     try {
         const { email } = req.body;
@@ -348,12 +338,10 @@ const resendVerificationEmail = async (req, res) => {
                 customError.badRequest({
                     message:
                         "Verification email resend request failed for 1 field",
-                    details: [
-                        {
-                            field: "email",
-                            message: "Email address is required",
-                        },
-                    ],
+                    details: {
+                        field: "email",
+                        message: "Email address is required",
+                    },
                 }),
             );
         }
@@ -364,8 +352,7 @@ const resendVerificationEmail = async (req, res) => {
         // Sending success to prevent email enumeration
         if (!user) {
             return res.status(200).json({
-                message:
-                    "If the email exists, verification email has been sent.",
+                message: "If the email exists, verification email has been sent.",
             });
         }
 
@@ -381,16 +368,19 @@ const resendVerificationEmail = async (req, res) => {
         // Generate new verification token
         const verificationToken = generateRandomToken();
 
+        // Update verification token in database
         await AuthModel.updateUserVerificationToken(
             client,
             user.id,
             false,
             verificationToken,
         );
+
         const firstNameResult = await client.query(
             `SELECT first_name FROM user_profiles WHERE user_id = $1`,
             [user.id],
         );
+
         await sendVerificationEmail(
             email,
             verificationToken,
@@ -404,6 +394,9 @@ const resendVerificationEmail = async (req, res) => {
         res.status(500).json(
             customError.internalServerError({
                 message: "Failed to resend verification email",
+                details: {
+                    error: error.message
+                }
             }),
         );
     } finally {
@@ -413,7 +406,7 @@ const resendVerificationEmail = async (req, res) => {
 
 // Forgot Password
 const forgotPassword = async (req, res) => {
-    const { client } = pool.connect();
+    const client = await pool.connect();
 
     try {
         const { email } = req.body;
@@ -423,12 +416,10 @@ const forgotPassword = async (req, res) => {
                 customError.badRequest({
                     message:
                         "Verification email resend request failed for 1 field",
-                    details: [
-                        {
-                            field: "email",
-                            message: "Email address is required",
-                        },
-                    ],
+                    details: {
+                        field: "email",
+                        message: "Email address is required",
+                    },
                 }),
             );
         }
@@ -474,15 +465,18 @@ const forgotPassword = async (req, res) => {
         res.status(500).json(
             customError.internalServerError({
                 message: "Failed to process password reset request",
+                details: {
+                    error: error.message
+                }
             }),
         );
     } finally {
-        client.release();
+        await client.release();
     }
 };
 
 const resetPassword = async (req, res) => {
-    const { client } = pool.connect();
+    const client = await pool.connect();
 
     try {
         const { token, newPassword, confirmNewPassword } = req.body;
@@ -502,24 +496,20 @@ const resetPassword = async (req, res) => {
             return res.status(400).json(
                 customError.badRequest({
                     message: "New password is required",
-                    details: [
-                        {
-                            field: "newPassword",
-                            message: "New password is required",
-                        },
-                    ],
+                    details: {
+                        field: "newPassword",
+                        message: "New password is required",
+                    },
                 }),
             );
         } else if (!confirmNewPassword) {
             return res.status(400).json(
                 customError.badRequest({
                     message: "Confirm new password is required",
-                    details: [
-                        {
-                            field: "confirmNewPassword",
-                            message: "Confirm new password is required",
-                        },
-                    ],
+                    details: {
+                        field: "confirmNewPassword",
+                        message: "Confirm new password is required",
+                    },
                 }),
             );
         }
@@ -573,16 +563,19 @@ const resetPassword = async (req, res) => {
         res.status(500).json(
             customError.internalServerError({
                 message: "Failed to process password reset request",
+                details: {
+                    error: error.message
+                }
             }),
         );
     } finally {
-        client.release();
+        await client.release();
     }
 };
 
 // Refresh token controller
 const refreshToken = async (req, res) => {
-    const { client } = pool.connect();
+    const client = await pool.connect();
 
     try {
         const refreshToken = req.cookies.refreshToken;
@@ -648,7 +641,7 @@ const refreshToken = async (req, res) => {
         // Store new refresh token
         const newRefreshTokenHash = hashToken(newRefreshToken);
         const newRefreshTokenExpiresAt = new Date(
-            Date.now() + process.env.REFRESH_TOKEN_EXPIRY,
+            Date.now() + 7 * 24 * 60 * 60 * 1000,
         );
 
         // Insert new refresh token into the database
@@ -678,16 +671,17 @@ const refreshToken = async (req, res) => {
             }),
         );
     } finally {
-        client.release();
+        await client.release();
     }
 };
 
 // Logout Controller
 const logout = async (req, res) => {
-    const { client } = await pool.connect();
+    const client = await pool.connect();
 
     try {
         const refreshToken = req.cookies.refreshToken;
+        console.log(refreshToken);
 
         if (!refreshToken) {
             return res.status(401).json(
@@ -700,7 +694,10 @@ const logout = async (req, res) => {
         const refreshTokenHash = hashToken(refreshToken);
 
         // Invalidate the refresh tokens
-        await AuthModel.invalidateRefreshToken(client, req.userId);
+        await AuthModel.invalidateRefreshTokenByTokenHash(client, refreshTokenHash);
+
+        // Clear refresh token cookie
+        res.clearCookie("refreshToken");
 
         res.status(200).json({
             message: "Logout successful",
@@ -710,6 +707,9 @@ const logout = async (req, res) => {
         res.status(500).json(
             customError.internalServerError({
                 message: "Failed to logout",
+                details: {
+                    error: error.message
+                }
             }),
         );
     } finally {

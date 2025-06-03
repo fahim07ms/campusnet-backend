@@ -6,9 +6,8 @@ const AuthModel = require("../models/authModel");
 // Middleware to verify access token
 const authMiddleware = async (req, res, next) => {
     // Get token from header
-    const authHeader = req.headers['authorization'];
+    const authHeader = req.headers['Authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-
     // Check if token is present and valid
     if (!token) {
         return res.status(401).json(customError.unauthorized({
@@ -39,7 +38,10 @@ const authMiddleware = async (req, res, next) => {
         next();
     } catch (error) {
         return res.status(403).json(customError.forbidden({
-            message: "Invalid or expired access token"
+            message: "Invalid or expired access token",
+            details: {
+                error: error.message
+            }
         }));
     }
 }

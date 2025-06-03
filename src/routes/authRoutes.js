@@ -24,9 +24,9 @@ router.post('/forgot-password', forgotPassword);
 
 router.post('/reset-password', resetPassword);
 
-router.post('/refresh-token', authMiddleware, refreshToken);
+router.post('/refresh-token', refreshToken, authMiddleware);
 
-router.post('/logout', authMiddleware, logout);
+router.post('/logout', logout, authMiddleware);
 
 
 module.exports = {
