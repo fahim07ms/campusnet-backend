@@ -1,0 +1,29 @@
+type: object
+description: An option within a poll that users can vote for.
+properties:
+  id:
+    type: string
+    format: uuid
+    readOnly: true
+    example: "1a2b3c4d-e89b-12d3-a456-426614174000"
+  pollId:
+    type: string
+    format: uuid
+    readOnly: true
+    example: "1a2b3c4d-e89b-12d3-a456-426614174000"
+  optionText:
+    type: string
+    minLength: 1
+    maxLength: 255
+    description: The text content of the poll option.
+    example: "Spring Semester Break"
+  voteCount:
+    type: integer
+    minimum: 0
+    readOnly: true
+    description: Number of votes received by this option. (Only visible when results are public).
+    example: 42
+required:
+  - id
+  - pollId
+  - text

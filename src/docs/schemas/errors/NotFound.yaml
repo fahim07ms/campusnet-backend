@@ -1,0 +1,10 @@
+description: The requested resource could not be found on the server.
+content:
+  application/json:
+    schema:
+      $ref: "../ErrorResponse.yaml"
+    example:
+      error: "resource_not_found"
+      code: 404
+      message: "The specified `item` with 'identifier' 'xyz' does not exist."
+      timestamp: "2024-05-30T15:02:00Z"

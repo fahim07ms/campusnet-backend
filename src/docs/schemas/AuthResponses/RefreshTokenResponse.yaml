@@ -1,0 +1,10 @@
+type: object
+description: Response after refreshing access token
+properties:
+  message:
+    type: string
+  data:
+    type: object
+    properties:
+      accessToken:
+        $ref: "../AuthToken"

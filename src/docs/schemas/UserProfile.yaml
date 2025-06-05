@@ -1,0 +1,99 @@
+type: object
+description: Comprehensive profile information for a user.
+properties:
+userId:
+  type: string
+  format: uuid
+  description: The unique identifier of the user this profile belongs to.
+  example: "123e4567-e89b-12d3-a456-426614174000"
+  readOnly: true
+firstName:
+  type: string
+  minLength: 1
+  maxLength: 50
+  description: User's first name.
+  example: "Jane"
+lastName:
+  type: string
+  minLength: 1
+  maxLength: 50
+  description: User's last name.
+  example: "Doe"
+profilePhoto:
+  type: string
+  format: uri
+  nullable: true
+  description: URL to the user's profile picture.
+  example: "https://storage.campusnet.app/avatars/usr_123e4567.png"
+coverPhotoUrl:
+  type: string
+  format: uri
+  nullable: true
+  description: URL to the user's profile cover photo.
+  example: "https://storage.campusnet.app/covers/usr_123e4567.jpg"
+bio:
+  type: string
+  maxLength: 500
+  nullable: true
+  description: A short biography or description about the user.
+  example: "Computer Science enthusiast, passionate about open source and AI. Third year student at University of Technology."
+birthDate:
+  type: string
+  format: date
+  nullable: true
+  description: User's date of birth (YYYY-MM-DD). Privacy settings may apply.
+  example: "2002-08-15"
+phone:
+  type: string
+  maxLength: 20
+  nullable: true
+  pattern: '^\+?[1-9]\d{1,14}$'
+  description: User's phone number. Privacy settings apply.
+  example: "+11234567890"
+studentId:
+  type: string
+  maxLength: 50
+  nullable: true
+  description: User's official student identifier, if applicable.
+  example: "STU-2022-00123"
+department:
+  type: string
+  maxLength: 100
+  nullable: true
+  description: User's academic department.
+  example: "Dept. of Computer Science & Engineering"
+graduationYear:
+  type: integer
+  nullable: true
+  description: User's expected or actual year of graduation.
+  example: 2025
+interests:
+  type: array
+  items:
+    type: string
+    minLength: 1
+    maxLength: 50
+    maxItems: 15
+    nullable: true
+  description: A list of user's interests or hobbies.
+  example: ["AI", "Web Development", "Hiking", "Photography"]
+address:
+  type: string
+  maxLength: 255
+  nullable: true
+  description: User's physical address (city, country, etc.)
+  example: "123 University Ave, Tech City, TC 54321"
+example:
+  userId: "123e4567-e89b-12d3-a456-426614174000"
+  firstName: Jane
+  lastName: Doe
+  profilePhoto: "https://storage.campusnet.app/covers/usr_123e4567.jpg"
+  coverPhotoUrl: "https://storage.campusnet.app/covers/usr_123e4567.jpg"
+  bio: "Computer Science enthusiast, passionate about open source and AI. Third year student at University of Technology."
+  birthDate: "2002-08-15"
+  phone: "+11234567890"
+  studentId: "STU-2022-00123"
+  department: "Dept. of Computer Science & Engineering"
+  graduationYear: 2028
+  interests: ["AI", "Web Development", "Hiking", "Photography"]
+  address: "123 University Ave, Tech City, TC 54321"

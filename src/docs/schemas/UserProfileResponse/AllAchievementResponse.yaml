@@ -1,0 +1,11 @@
+type: object
+properties:
+  message:
+    type: string
+  data:
+    type: object
+    properties:
+      achievements:
+        type: array
+        items:
+          $ref: "../Achievement.yaml"

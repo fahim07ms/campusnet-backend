@@ -1,0 +1,10 @@
+description: The authenticated user does not have permission to perform the requested action on the resource.
+content:
+  application/json:
+    schema:
+      $ref: "../ErrorResponse.yaml"
+    example:
+      error: "forbidden_access"
+      code: 403
+      message: "You do not have the necessary permissions to access or modify this resource."
+      timestamp: "2024-05-30T15:01:00Z"

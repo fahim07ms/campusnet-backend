@@ -1,0 +1,12 @@
+description:
+  The request could not be completed due to a conflict with the current state of the target resource.
+  This code is used in situations where the user might be able to resolve the conflict and resubmit the request.
+content:
+  application/json:
+    schema:
+      $ref: "../ErrorResponse.yaml"
+    example:
+      error: "resource_conflict"
+      code: 409
+      message: "A user with the provided email address already exists."
+      timestamp: "2024-05-30T15:04:00Z"

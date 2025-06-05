@@ -1,0 +1,51 @@
+type: object
+description: Represents a notification for a user about an activity or event.
+properties:
+    id:
+        type: string
+        format: uuid
+        readOnly: true
+        description: Unique identifier for the notification.
+        example: "923e4567-e89b-12d3-a456-426614174000"
+    userId:
+        type: string
+        format: uuid
+        description: Identifier of the user who is the recipient of this notification.
+        example: "123e4567-e89b-12d3-a456-426614174000"
+    type:
+        $ref: "./enums/NotificationTypeEnum.yaml"
+    sender: # User who triggered the notification, if applicable
+        $ref: "./User.yaml"
+        nullable: true # Some notifications might be system-generated
+    content:
+        type: string
+        maxLength: 500
+        description: The main text content of the notification.
+        example: "John Doe commented on your post: 'Annual Tech Symposium 2024'."
+    relatedEntityId:
+        type: string
+        format: uuid
+        nullable: true
+        description: Identifier of the entity this notification is related to (e.g., post ID, event ID, user ID of sender).
+        example: "523e4567-e89b-12d3-a456-426614174000"
+    relatedEntityType:
+        $ref: "./enums/RelatedEntityType.yaml"
+        nullable: true
+    isRead:
+        type: boolean
+        default: false
+        description: Indicates if the recipient has read the notification.
+        example: false
+    createdAt:
+        type: string
+        format: date-time
+        readOnly: true
+        description: Timestamp when the notification was created.
+        example: "2024-05-25T11:00:00Z"
+required:
+    - id
+    - recipientId
+    - type
+    - content
+    - relatedEntityId
+    - relatedEntityType

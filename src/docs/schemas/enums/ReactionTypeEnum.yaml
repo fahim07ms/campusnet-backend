@@ -1,0 +1,2 @@
+type: string
+enum: [ like, love, laugh, sad, angry ]

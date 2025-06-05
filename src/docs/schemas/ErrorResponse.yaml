@@ -1,0 +1,41 @@
+type: object
+description: Standard API error response structure.
+properties:
+  error:
+    type: string
+    description: A unique, machine-readable error type.
+    example: "validation_error"
+  code:
+    type: integer
+    description: A unique, machine-readable error code
+    example: 401
+  message:
+    type: string
+    description: A human-readable summary of the error.
+    example: "The request data failed validation."
+  details:
+    type: object
+    properties:
+      field:
+        type: string
+        description: The specific field that caused the validation error.
+        example: "email"
+      message:
+        type: string
+        description: A detailed message about the error on this field.
+        example: "Email address is already in use."
+    additionalProperties: true
+    nullable: true
+    example:
+      field: "password"
+      message: "Password must be at least 8 characters long."
+  timestamp:
+    type: string
+    format: date-time
+    description: The date and time (ISO 8601 UTC) when the error occurred.
+    example: "2024-05-30T14:30:00Z"
+required:
+  - error
+  - code
+  - message
+  - timestamp

@@ -1,0 +1,20 @@
+type: object
+description: Represents a user's membership in a group.
+properties:
+  user:
+    $ref: "./User.yaml"
+  groupId:
+    type: string
+    format: uuid
+    example: "423e4567-e89b-12d3-a456-426614174000"
+  role:
+    $ref: "./enums/CommunityRoleEnum.yaml" # Reusing for group roles
+  joinedAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2023-09-05T10:00:00Z"
+required:
+  - user
+  - groupId
+  - role

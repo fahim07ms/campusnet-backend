@@ -1,0 +1,13 @@
+type: object
+properties:
+  message:
+    type: string
+  data:
+    type: object
+    properties:
+      universities:
+        type: array
+        items:
+          $ref: "../University.yaml"
+  meta:
+    $ref: "../PaginationMetadata.yaml"

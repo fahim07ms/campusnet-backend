@@ -1,0 +1,23 @@
+type: object
+description: Represents a tag used for categorizing content like posts and events.
+properties:
+  id:
+    type: string
+    format: uuid
+    readOnly: true
+    example: "abc123e4-e89b-12d3-a456-426614174000"
+  name:
+    type: string
+    minLength: 1
+    maxLength: 50
+    pattern: "^[a-zA-Z0-9-#]+$" # Allow letters, numbers, hyphens, hash
+    description: The tag name. Should be unique (case-insensitive).
+    example: "artificial-intelligence"
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+    description: Tag creation time
+required:
+  - id
+  - name

@@ -1,0 +1,2 @@
+type: string
+enum: [ post, event, user, comment ]

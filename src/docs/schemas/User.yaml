@@ -1,0 +1,67 @@
+type: object
+description: Detailed representation of a user account.
+properties:
+  id:
+    type: string
+    format: uuid
+    description: Unique identifier for the user.
+    example: "123e4567-e89b-12d3-a456-426614174000"
+    readOnly: true
+  email:
+    type: string
+    format: email
+    description: User's primary email address (used for login and notifications).
+    example: "jane.doe@university.edu"
+  username:
+    type: string
+    description: Unique username for the user.
+    minLength: 3
+    maxLength: 30
+    pattern: "^[a-zA-Z0-9_.-]+$"
+    example: "jane.doe_23"
+  role:
+    $ref: "./enums/UserRoleEnum.yaml"
+  isVerified:
+    type: boolean
+    description: Indicates if the user's email address has been verified.
+    default: false
+    example: true
+  isActive:
+    type: boolean
+    description: Indicates if the user account is currently active or disabled.
+    default: true
+    example: true
+  universityId:
+    type: string
+    format: uuid
+    description: Identifier of the university the user is primarily associated with.
+    nullable: true
+    example: "223e4567-e89b-12d3-a456-426614174000"
+  lastLoginAt:
+    type: string
+    format: date-time
+    description: Timestamp of the user's last successful login.
+    nullable: true
+    readOnly: true
+    example: "2024-05-29T10:30:00Z"
+  createdAt:
+    type: string
+    format: date-time
+    description: Timestamp of when the user account was created.
+    readOnly: true
+    example: "2024-01-15T09:30:00Z"
+  updatedAt:
+    type: string
+    format: date-time
+    description: Timestamp of when the user account was last updated.
+    readOnly: true
+    example: "2024-05-15T11:00:00Z"
+required:
+  - id
+  - email
+  - username
+  - role
+  - isVerified
+  - isActive
+  - createdAt
+  - updatedAt

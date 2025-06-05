@@ -1,0 +1,65 @@
+type: object
+description: Represents a comment made by a user on a post or event.
+properties:
+    id:
+        type: string
+        format: uuid
+        readOnly: true
+        description: Unique identifier for the comment.
+        example: "823e4567-e89b-12d3-a456-426614174000"
+    author:
+        $ref: "./User.yaml"
+    postId:
+        type: string
+        format: uuid
+        nullable: true
+        description: Identifier of the post this comment belongs to (if applicable).
+        example: "523e4567-e89b-12d3-a456-426614174000"
+    eventId:
+        type: string
+        format: uuid
+        nullable: true
+        description: Identifier of the event this comment belongs to (if applicable).
+        example: "623e4567-e89b-12d3-a456-426614174000"
+    parentId:
+        type: string
+        format: uuid
+        nullable: true
+        description: Identifier of the parent comment if this is a reply.
+        example: "parent_comment_id_example"
+    content:
+        type: string
+        minLength: 1
+        maxLength: 2000
+        description: The textual content of the comment. Can support limited markdown.
+        example: "Great post! I totally agree with your points."
+    likeCount:
+        type: integer
+        minimum: 0
+        default: 0
+        readOnly: true
+        example: 15
+    replies:
+        type: array
+        items:
+            $ref: "./Comment.yaml"
+        nullable: true
+        description: A list of replies to this comment.
+        readOnly: true # Replies are typically fetched as part of the comment or via a separate endpoint
+    createdAt:
+        type: string
+        format: date-time
+        readOnly: true
+        example: "2024-02-15T15:00:00Z"
+    updatedAt:
+        type: string
+        format: date-time
+        readOnly: true
+        example: "2024-02-15T15:05:00Z"
+required:
+    - id
+    - author
+    - content
+    - createdAt
+    # postId or eventId should be conditionally required based on context,
+    # but OpenAPI doesn't easily support this. Backend validation is key.

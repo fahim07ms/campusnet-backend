@@ -1,0 +1,33 @@
+type: object
+description: Represents a connection or relationship between two users.
+properties:
+    id:
+        type: string
+        format: uuid
+        readOnly: true
+        description: Unique identifier for the connection record.
+        example: "con_f1e2d3c4-b89b-12d3-a456-426614174000"
+    requester: # User who initiated the connection
+        $ref: "./User.yaml"
+    recipient: # User who received the connection request
+        $ref: "./User.yaml"
+    status:
+        $ref: "./enums/ConnectionStatusEnum.yaml"
+    requestedAt: # When the request was made
+        type: string
+        format: date-time
+        readOnly: true
+        description: Timestamp when the connection request was initiated.
+        example: "2024-05-01T12:00:00Z"
+    updatedAt:
+        type: string
+        format: date-time
+        readOnly: true
+        description: Timestamp of the last update to the connection status.
+        example: "2024-05-01T14:30:00Z"
+required:
+    - id
+    - requester
+    - recipient
+    - status
+    - requestedAt

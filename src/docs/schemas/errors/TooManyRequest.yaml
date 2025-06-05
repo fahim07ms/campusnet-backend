@@ -1,0 +1,24 @@
+description: |
+  The user has sent too many requests in a given amount of time ("rate limiting").
+  The `Retry-After` header might be included to indicate how long to wait before making a new request.
+#headers:
+#  Retry-After:
+#    description: The number of seconds to wait before making a new request.
+#    schema:
+#      type: integer
+#    example: 60 # 60 seconds
+#  X-RateLimit-Limit:
+#    $ref: "#/components/headers/X-RateLimit-Limit"
+#  X-RateLimit-Remaining:
+#    $ref: "#/components/headers/X-RateLimit-Remaining"
+#  X-RateLimit-Reset:
+#    $ref: "#/components/headers/X-RateLimit-Reset"
+content:
+  application/json:
+    schema:
+      $ref: "../ErrorResponse.yaml"
+    example:
+      error: "rate_limit_exceeded"
+      code: 429
+      message: "You have exceeded the allowed number of requests. Please try again later."
+      timestamp: "2024-05-30T15:05:00Z"

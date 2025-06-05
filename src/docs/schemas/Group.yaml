@@ -1,0 +1,86 @@
+type: object
+description: Represents a student-led group or club within a community.
+properties:
+  id:
+    type: string
+    format: uuid
+    readOnly: true
+    example: "423e4567-e89b-12d3-a456-426614174000"
+  communityId:
+    type: string
+    format: uuid
+    description: Identifier of the parent community this group belongs to.
+    example: "323e4567-e89b-12d3-a456-426614174000"
+  name:
+    type: string
+    minLength: 3
+    maxLength: 255
+    description: Name of the group.
+    example: "AI Enthusiasts Club"
+  description:
+    type: string
+    maxLength: 2000
+    nullable: true
+    description: Detailed description of the group, its mission, and activities.
+    example: "A club for students passionate about Artificial Intelligence. We host weekly discussions, workshops, and guest speaker sessions."
+  logoUrl:
+    type: string
+    format: uri
+    nullable: true
+    description: URL for the group's logo.
+    example: "https://storage.campusnet.app/groups/grp_423e4567_logo.png"
+  coverPhotoUrl:
+    type: string
+    format: uri
+    nullable: true
+    description: URL for the group's cover photo.
+    example: "https://storage.campusnet.app/groups/grp_423e4567_cover.jpg"
+  isPublic:
+    type: boolean
+    description: If true, the group is visible to all community members. If false, it might be invite-only or hidden.
+    default: true
+    example: true
+  memberApprovalRequired:
+    type: boolean
+    description: If true, new members require approval from group admins/moderators to join.
+    default: false
+    example: false
+  postApprovalRequired:
+    type: boolean
+    description: If true, posts made within the group require approval from group admins/moderators before becoming visible.
+    default: false
+    example: false
+  rules: # From original schema
+    type: string
+    maxLength: 5000 # Generous space for rules
+    nullable: true
+    description: Rules and guidelines for group members.
+    example: "1. Be respectful to all members.\n2. Keep discussions relevant to AI.\n3. No spam or self-promotion without approval."
+  memberCount:
+    type: integer
+    minimum: 0
+    readOnly: true
+    description: Total number of members in this group.
+    example: 75
+  createdBy:
+    type: string
+    format: uuid
+    readOnly: true
+    description: Identifier of the user who created the group.
+    example: "123e4567-e89b-12d3-a456-426614174000"
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2023-09-01T11:00:00Z"
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2024-03-10T18:45:00Z"
+required:
+  - id
+  - communityId
+  - name
+  - createdBy
+  - createdAt

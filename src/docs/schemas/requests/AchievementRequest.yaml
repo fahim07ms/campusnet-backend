@@ -1,0 +1,21 @@
+type: object
+properties:
+  title:
+    type: string
+    maxLength: 255
+  issuedBy:
+    type: string
+    maxLength: 255
+    nullable: true
+  description:
+    type: string
+    format: text
+    nullable: true
+  achievedAt:
+    type: string
+    format: date
+    nullable: true
+required:
+  - title
+  - achievedAt
+  - issuedBy

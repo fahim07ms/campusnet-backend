@@ -1,0 +1,41 @@
+type: object
+description: Represents a user's achievement, award, or certification.
+properties:
+  id:
+    type: string
+    format: uuid
+    readOnly: true
+    example: "b23e4567-e89b-12d3-a456-426614174000"
+  userId:
+    type: string
+    format: uuid
+    description: Identifier of the user this achievement belongs to.
+    example: "123e4567-e89b-12d3-a456-426614174000"
+  title:
+    type: string
+    maxLength: 255
+    description: Title of the achievement or award.
+    example: "Winner - National Programming Contest 2023"
+  issuedBy:
+    type: string
+    maxLength: 255
+    nullable: true
+    description: Organization or entity that issued the achievement.
+    example: "National Coding Society"
+  achieved_at:
+    type: string
+    format: date
+    nullable: true
+    description: Date when the achievement was issued or earned (YYYY-MM-DD).
+    example: "2023-11-20"
+  description:
+    type: string
+    nullable: true
+    description: Detailed description of the achievement.
+    example: "Secured first place among 500 participants in a 24-hour coding competition focused on algorithmic problem-solving."
+required:
+  - id
+  - userId
+  - title
+  - issuedBy
+  - achieved_at

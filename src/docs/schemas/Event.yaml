@@ -1,0 +1,124 @@
+type: object
+description: Represents a campus event, workshop, meeting, or activity.
+properties:
+  id:
+    type: string
+    format: uuid
+    readOnly: true
+    example: "evt_623e4567-e89b-12d3-a456-426614174000"
+  organizer:
+    $ref: "./User.yaml"
+  communityId:
+    type: string
+    format: uuid
+    nullable: true
+    description: Identifier of the community hosting this event.
+    example: "323e4567-e89b-12d3-a456-426614174000"
+  groupId:
+    type: string
+    format: uuid
+    nullable: true
+    description: Identifier of the group hosting this event.
+    example: "423e4567-e89b-12d3-a456-426614174000"
+  title:
+    type: string
+    minLength: 3
+    maxLength: 150 # Slightly longer than user example
+    description: Title of the event.
+    example: "Annual Campus Tech Symposium 2024"
+  description:
+    type: string
+    maxLength: 5000 # More space for event details
+    nullable: true
+    description: Detailed description of the event, including agenda, speakers, etc. Can support markdown.
+    example: "Join us for three days of insightful talks, hands-on workshops, and networking opportunities with leaders in the tech industry. Keynote by Dr. Quantum Entanglement."
+  startDate:
+    type: string
+    format: date-time # Full timestamp
+    description: Start date and time of the event.
+    example: "2024-10-22T09:00:00Z"
+  endDate:
+    type: string
+    format: date-time # Full timestamp
+    nullable: true # Optional for single-day or instantaneous events
+    description: End date and time of the event.
+    example: "2024-10-24T17:00:00Z"
+  location:
+    type: string
+    maxLength: 255
+    nullable: true
+    description: Physical location of the event (e.g., Room, Building, Address).
+    example: "Grand Auditorium, Innovation Hall, 1 Tech Park Drive"
+  isOnline:
+    type: boolean
+    description: Indicates if the event is hosted online.
+    default: false
+    example: false
+  onlineEventUrl:
+    type: string
+    format: uri
+    nullable: true
+    description: URL for joining the online event (e.g., Zoom, Teams link).
+    example: "https://zoom.us/j/1234567890"
+  venueDetails:
+    type: string
+    maxLength: 500
+    nullable: true
+    description: Additional details about the venue, like parking or accessibility.
+    example: "Parking available in Lot C. Main entrance is wheelchair accessible."
+  coverImageUrl:
+    type: string
+    format: uri
+    nullable: true
+    description: URL for the event's cover image or banner.
+    example: "https://storage.campusnet.app/events/evt_623e4567_cover.jpg"
+  tags:
+    type: array
+    items:
+      $ref: "./Tag.yaml"
+    maxItems: 10
+    nullable: true
+  status:
+    $ref: "./enums/EventStatusEnum.yaml"
+  isPublic:
+    type: boolean
+    description: If true, this event might be visible across campuses or to the public, depending on system settings.
+    default: true
+    example: true
+  maxAttendees:
+    type: integer
+    minimum: 1
+    nullable: true
+    description: Maximum number of attendees allowed. Null for unlimited.
+    example: 200
+  attendeeCount:
+    type: integer
+    minimum: 0
+    readOnly: true
+    description: Number of users confirmed as 'attending'.
+    example: 115
+  interestedCount: # From original schema
+    type: integer
+    minimum: 0
+    readOnly: true
+    description: Number of users marked as 'interested'.
+    example: 45
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2024-04-01T10:00:00Z"
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2024-05-15T16:30:00Z"
+required:
+  - id
+  - organizer
+  - title
+  - description
+  - startDate
+  - endDate
+  - status
+  - createdAt

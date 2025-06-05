@@ -1,0 +1,80 @@
+type: object
+description: Represents an academic institution within CampusNet.
+properties:
+  id:
+    type: string
+    format: uuid
+    readOnly: true
+    example: "223e4567-e89b-12d3-a456-426614174000"
+  name:
+    type: string
+    minLength: 3
+    maxLength: 255
+    description: Official name of the university.
+    example: "Metropolitan University of Technology"
+  domain:
+    type: array
+    description: Official email domain of the university (e.g., 'mtech.edu'). Used for user verification.
+    items:
+      maxLength: 100
+      pattern: '^[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'
+      example: "mtech.edu"
+  location:
+    type: string
+    maxLength: 255
+    nullable: true
+    description: Physical location of the university (e.g., City, Country).
+    example: "Techville, Innovaland"
+  establishedYear:
+    type: integer
+    nullable: true
+    description: Year the university was established.
+    example: 1985
+  description:
+    type: string
+    maxLength: 2000
+    nullable: true
+    description: A brief description or mission statement of the university.
+    example: "A leading institution for science, engineering, and arts, fostering innovation and excellence."
+  logoUrl:
+    type: string
+    format: uri
+    nullable: true
+    description: URL to the university's official logo.
+    example: "https://storage.campusnet.app/logos/uni_223e4567.png"
+  websiteUrl: # Added common field
+    type: array
+    description: URL to the university's official website.
+    items:
+      type: string
+      format: uri
+      example: "https://www.mtech.edu"
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2020-01-01T00:00:00Z"
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2023-06-15T10:00:00Z"
+example:
+  id: "223e4567-e89b-12d3-a456-426614174000"
+  name: "Metropolitan University of Technology"
+  domain: ["mtech.edu"]
+  location: "Techville, Innovaland"
+  establishedYear: 1999
+  description: "A leading institution for science, engineering, and arts, fostering innovation and excellence."
+  logoUrl: "https://storage.campusnet.app/logos/uni_223e4567.png"
+  websiteUrl: ["https://www.mtech.edu"]
+  createdAt: "2020-01-01T00:00:00Z"
+  updatedAt: "2020-01-01T00:00:00Z"
+
+required:
+  - id
+  - name
+  - domain
+  - establishedYear
+  - websiteUrl
+  - createdAt

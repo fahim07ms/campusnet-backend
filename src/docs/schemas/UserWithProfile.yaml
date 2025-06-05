@@ -1,0 +1,80 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+  email:
+    type: string
+    format: email
+  username:
+    type: string
+  role:
+    $ref: "./enums/UserRoleEnum.yaml"
+  isVerified:
+    type: boolean
+  isActive:
+    type: boolean
+  createdAt:
+    type: string
+    format: date-time
+  updatedAt:
+    type: string
+    format: date-time
+  university_name:
+    type: string
+  university_logo:
+    type: string
+    format: url
+  lastLoginAt:
+    type: string
+    format: date-time
+    nullable: true
+  profile:
+    first_name:
+      type: string
+    last_name:
+      type: string
+    bio:
+      type: string
+    profile_picture:
+      type: string
+    cover_photo:
+      type: string
+    other:
+      type: string
+
+example:
+  id: "123e4567-e89b-12d3-a456-426614174000"
+  email: "jane.doe@university.edu"
+  username: "jane.doe_23"
+  role: "student"
+  isVerified: true
+  isActive: true
+  universityName: "ABC University"
+  university_logo: "https://storage.campusnet.com/abcuniversitylogo.png"
+  createdAt: "2024-01-15T09:30:00Z"
+  updatedAt: "2024-05-15T11:00:00Z"
+  lastLoginAt: "2024-06-01T10:00:00Z"
+  profile:
+    firstName: "Jane"
+    lastName: "Doe"
+    avatarUrl: "https://storage.campusnet.app/avatars/usr_123e4567.png"
+    bio: "CS student, AI enthusiast. Third year at MTech."
+    graduationYear: 2025
+    department: "Computer Science"
+    bloodGroup: "O+"
+    profileVisibility: "connections"
+    other: "...."
+    # ... other profile fields
+
+required:
+  - id
+  - email
+  - username
+  - role
+  - isVerified
+  - isActive
+  - createdAt
+  - updatedAt
+  - profile
+  - university

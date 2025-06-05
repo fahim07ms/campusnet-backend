@@ -88,7 +88,10 @@ export const userDataFromId = async (client, userId) => {
         username: data.username,
         role: data.role,
         is_active: data.is_active,
+        is_verified: data.is_verified,
         last_login: data.last_login,
+        createAt: data.createAt,
+        updatedAt: data.updatedAt,
         university_name: data.university_name,
         university_logo: data.logo_url,
         userProfile: {

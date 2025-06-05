@@ -1,0 +1,9 @@
+type: object
+properties:
+  message:
+    type: string
+  data:
+    type: object
+    properties:
+      university:
+        $ref: "../University.yaml"

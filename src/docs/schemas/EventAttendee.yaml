@@ -1,0 +1,25 @@
+type: object
+description: Represents a user's attendance status for an event.
+properties:
+  user:
+    $ref: "./User.yaml"
+  eventId:
+    type: string
+    format: uuid
+    example: "evt_623e4567-e89b-12d3-a456-426614174000"
+  status:
+    type: string
+    enum: [attending, interested]
+    description: User's RSVP status for the event.
+    example: "attending"
+  joinedAt:
+    type: string
+    format: date-time
+    readOnly: true
+    description: Timestamp when the user registered their status.
+    example: "2024-04-10T11:00:00Z"
+required:
+  - user
+  - eventId
+  - status
+  - joinedAt

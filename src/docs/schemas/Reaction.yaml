@@ -1,0 +1,35 @@
+type: object
+description: Represents a reaction (e.g., like, love) from a user to a post or comment.
+properties:
+    id:
+        type: string
+        format: uuid
+        readOnly: true
+        description: Unique identifier for the reaction.
+        example: "def456a1-e89b-12d3-a456-426614174000"
+    user:
+        $ref: "./User.yaml"
+    postId:
+        type: string
+        format: uuid
+        nullable: true
+        description: Identifier of the post being reacted to (if applicable).
+        example: "pst_523e4567-e89b-12d3-a456-426614174000"
+    commentId:
+        type: string
+        format: uuid
+        nullable: true
+        description: Identifier of the comment being reacted to (if applicable).
+        example: "cmt_823e4567-e89b-12d3-a456-426614174000"
+    reactionType:
+        $ref: "./enums/ReactionTypeEnum.yaml"
+    createdAt:
+        type: string
+        format: date-time
+        readOnly: true
+        example: "2024-02-15T15:10:00Z"
+required:
+    - id
+    - user
+    - reactionType
+    - createdAt

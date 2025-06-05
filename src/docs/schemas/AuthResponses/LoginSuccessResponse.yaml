@@ -1,0 +1,12 @@
+type: object
+description: Success response on a successful login
+properties:
+  message:
+    type: string
+  data:
+    type: object
+    properties:
+      accessToken:
+        $ref: "../AuthToken.yaml"
+      userId:
+        type: uuid

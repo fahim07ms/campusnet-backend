@@ -1,0 +1,20 @@
+type: object
+description: Represents a user's membership in a community.
+properties:
+  user:
+    $ref: "./User.yaml"
+  communityId:
+    type: string
+    format: uuid
+    example: "323e4567-e89b-12d3-a456-426614174000"
+  role:
+    $ref: "./enums/CommunityRoleEnum.yaml"
+  joinedAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2022-08-10T14:20:00Z"
+required:
+  - user
+  - communityId
+  - role

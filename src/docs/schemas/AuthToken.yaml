@@ -1,0 +1,7 @@
+type: object
+properties:
+  accessToken:
+    type: string
+    object: "abc-abc-abc-abc-abc"
+  expiresIn:
+    type: date-time
