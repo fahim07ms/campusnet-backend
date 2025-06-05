@@ -36,3 +36,6 @@ temp/
 
 # Logs and debug
 debug.log
+
+# Documentation
+docs/
