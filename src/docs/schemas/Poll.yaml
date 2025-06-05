@@ -1,0 +1,83 @@
+type: object
+description: Represents a poll for gathering opinions or making decisions.
+properties:
+  id:
+    type: string
+    format: uuid
+    readOnly: true
+    example: "723e4567-e89b-12d3-a456-426614174000"
+  creator:
+    $ref: "./User.yaml"
+  communityId:
+    type: string
+    format: uuid
+    nullable: true
+    example: "com_323e4567-e89b-12d3-a456-426614174000"
+  groupId:
+    type: string
+    format: uuid
+    nullable: true
+    example: "grp_423e4567-e89b-12d3-a456-426614174000"
+  question:
+    type: string
+    minLength: 1
+    description: The main question of the poll.
+    example: "When should we schedule the next club meeting?"
+  description:
+    type: string
+    maxLength: 1000
+    nullable: true
+    description: Additional context or description for the poll.
+    example: "Please vote for your preferred day. The meeting will cover planning for the upcoming semester."
+  options:
+    type: array
+    items:
+      $ref: "./PollOption.yaml"
+    minItems: 2
+    maxItems: 10
+    description: List of options users can vote for.
+  deadline:
+    type: string
+    format: date-time
+    nullable: true
+    description: Timestamp when voting for the poll ends. Null for no deadline.
+    example: "2024-06-10T23:59:59Z"
+  isPublic:
+    type: boolean
+    default: true
+  allowMultipleVotes:
+    type: boolean
+    description: If true, users can select multiple options.
+    default: false
+    example: false
+  showResultsBeforeDeadline:
+    type: boolean
+    description: If true, results are visible to voters before the deadline. Otherwise, only after the deadline or if the creator makes them public.
+    default: false
+    example: true
+  status:
+    $ref: "./enums/PostStatusEnum.yaml"
+    description: Approval status if polls require moderation.
+  totalVotes:
+    type: integer
+    minimum: 0
+    readOnly: true
+    description: Total number of votes cast in this poll.
+    example: 150
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2024-06-01T09:00:00Z"
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2024-06-01T09:00:00Z"
+required:
+  - id
+  - creator
+  - question
+  - options
+  - status
+  - createdAt

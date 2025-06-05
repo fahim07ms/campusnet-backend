@@ -1,0 +1,36 @@
+type: object
+description: Records a user's vote on a specific poll option.
+properties:
+    id:
+        type: string
+        format: uuid
+        readOnly: true
+        description: Unique identifier for the vote record.
+        example: "a1b2c3d4-e89b-12d3-a456-426614174000"
+    pollId:
+        type: string
+        format: uuid
+        description: Identifier of the poll this vote belongs to.
+        example: "723e4567-e89b-12d3-a456-426614174000"
+    userId:
+        type: string
+        format: uuid
+        description: Identifier of the user who cast the vote.
+        example: "123e4567-e89b-12d3-a456-426614174000"
+    pollOptionId:
+        type: string
+        format: uuid
+        description: Identifier of the poll option selected by the user.
+        example: "1a2b3c4d-e89b-12d3-a456-426614174000"
+    votedAt:
+        type: string
+        format: date-time
+        readOnly: true
+        description: Timestamp when the vote was cast.
+        example: "2024-06-02T10:30:00Z"
+required:
+    - id
+    - pollId
+    - userId
+    - pollOptionId
+    - votedAt

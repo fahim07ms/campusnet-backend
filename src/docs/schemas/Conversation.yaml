@@ -1,0 +1,35 @@
+type: object
+description: Represents a summary of a direct message conversation with another user.
+properties:
+    id:
+        type: string
+        format: uuid
+        readOnly: true
+        description: Unique identifier for the conversation.
+        example: "c4d3e2b1-a89b-12d3-a456-426614174000"
+    withUser:
+        $ref: "./User.yaml"
+    lastMessage:
+        $ref: "./Message.yaml" # The most recent message in the conversation
+        nullable: true # Could be a new conversation with no messages yet
+    unreadCount:
+        type: integer
+        minimum: 0
+        description: Number of unread messages from `withUser` for the authenticated user.
+        example: 3
+    lastActivityAt: # Timestamp of the last message
+        type: string
+        format: date-time
+        readOnly: true
+        description: Timestamp of the last activity (last message sent) in this conversation.
+        example: "2024-05-28T15:30:00Z"
+    createdAt:
+        type: string
+        format: date-time
+        description: Time when first conversation started
+        example: "2024-05-28T15:30:00Z"
+required:
+    - id
+    - withUser
+    - unreadCount
+    - lastActivityAt

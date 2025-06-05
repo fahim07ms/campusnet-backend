@@ -1,0 +1,2 @@
+type: string
+enum: [ "SSC/O-Level", "HSC/A-Level", "Undergrade", "Postgrad" ]

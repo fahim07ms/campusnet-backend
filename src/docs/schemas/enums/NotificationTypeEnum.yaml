@@ -1,0 +1,13 @@
+type: string
+enum:
+  [
+    post_approved,
+    post_rejected,
+    post_comment,
+    post_reaction,
+    comment_reaction,
+    connection_accepted,
+    connection_rejected,
+    event_reminder,
+    connection_request,
+  ]

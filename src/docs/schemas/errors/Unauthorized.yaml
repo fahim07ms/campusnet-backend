@@ -1,0 +1,10 @@
+description: Authentication is required and has failed or has not yet been provided.
+content:
+  application/json:
+    schema:
+      $ref: "../ErrorResponse.yaml"
+    example:
+      error: unauthorized
+      code: 401
+      message: Valid authentication credentials were not provided.
+      timestamp: "2024-05-30T15:00:00Z"

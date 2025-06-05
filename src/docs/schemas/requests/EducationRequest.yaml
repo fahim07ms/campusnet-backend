@@ -1,0 +1,28 @@
+type: object
+properties:
+  level:
+    $ref: "../enums/EduLevelEnum.yaml"
+  institution:
+    type: string
+    maxLength: 255
+  degree:
+    type: string
+    maxLength: 100
+    nullable: true
+  fieldOfStudy:
+    type: string
+    maxLength: 100
+    nullable: true
+  startDate:
+    type: string
+    format: date
+    nullable: true
+  endDate:
+    type: string
+    format: date
+    nullable: true
+required:
+  - level
+  - institution
+  - fieldOfStudy
+  - startDate

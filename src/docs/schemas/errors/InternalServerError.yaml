@@ -1,0 +1,12 @@
+description: |
+  An unexpected condition was encountered on the server that prevented it from fulfilling the request.
+  This error is generally not the client's fault.
+content:
+  application/json:
+    schema:
+      $ref: "../ErrorResponse.yaml"
+    example:
+      error: "internal_server_error"
+      code: 500
+      message: "An unexpected error occurred. Please try again later. If the problem persists, contact support."
+      timestamp: "2024-05-30T15:06:00Z"

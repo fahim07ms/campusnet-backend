@@ -1,0 +1,13 @@
+description: "The server cannot or will not process the request due to something perceived to be a client error (e.g., malformed request syntax, invalid request message framing, or deceptive request routing). Check the `details` array for specific field errors."
+content:
+  application/json:
+    schema:
+      $ref: "../ErrorResponse.yaml"
+    example:
+      error: "validation_error"
+      code: 400
+      message: "Request validation failed for 1 field(s)."
+      details:
+        field: "startDate"
+        message: "Start date must be in the future."
+      timestamp: "2024-05-30T15:03:00Z"

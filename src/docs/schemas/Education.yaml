@@ -1,0 +1,49 @@
+type: object
+description: Represents an educational qualification or period of study for a user.
+properties:
+  id:
+    type: string
+    format: uuid
+    readOnly: true
+    example: "a23e4567-e89b-12d3-a456-426614174000"
+  userId:
+    type: string
+    format: uuid
+    description: Identifier of the user this education entry belongs to.
+    example: "123e4567-e89b-12d3-a456-426614174000"
+  level:
+    $ref: "./enums/EduLevelEnum.yaml"
+  institution:
+    type: string
+    maxLength: 255
+    description: Name of the educational institution.
+    example: "University of Technology"
+  degree:
+    type: string
+    maxLength: 100
+    nullable: true
+    description: Name of the degree obtained or being pursued (e.g., B.Sc., M.A.).
+    example: "Bachelor of Science"
+  fieldOfStudy:
+    type: string
+    maxLength: 100
+    nullable: true
+    description: Major or field of study.
+    example: "Computer Science"
+  startDate:
+    type: string
+    format: date
+    nullable: true
+    description: Start date of the study period (YYYY-MM-DD).
+    example: "2021-09-01"
+  endDate:
+    type: string
+    format: date
+    nullable: true
+    description: End date of the study period or expected graduation date (YYYY-MM-DD).
+    example: "2025-06-30"
+required:
+  - id
+  - userId
+  - level
+  - institutionName

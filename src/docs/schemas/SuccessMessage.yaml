@@ -1,0 +1,12 @@
+type: object
+description: Generic success response with a message.
+properties:
+    message:
+        type: string
+        example: "Operation completed successfully."
+    data: # Changed to object as per user's example for AuthToken response
+        type: object
+        example: { id: "res_some_resource_id", status: "updated" }
+required:
+    - message
+    - data

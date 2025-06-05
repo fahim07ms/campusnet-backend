@@ -1,0 +1,105 @@
+type: object
+description: Represents a user-generated post, announcement, or piece of news.
+properties:
+  id:
+    type: string
+    format: uuid
+    readOnly: true
+    example: "523e4567-e89b-12d3-a456-426614174000"
+  author:
+    $ref: "./User.yaml"
+  communityId:
+    type: string
+    format: uuid
+    nullable: true
+    description: Identifier of the community this post belongs to (if not in a group).
+    example: "323e4567-e89b-12d3-a456-426614174000"
+  groupId:
+    type: string
+    format: uuid
+    nullable: true
+    description: Identifier of the group this post belongs to.
+    example: "423e4567-e89b-12d3-a456-426614174000"
+  content:
+    type: string
+    minLength: 1
+    maxLength: 10000
+    description: Main textual content of the post. Can support markdown.
+    example: "Hello everyone! We're looking for volunteers for our annual charity drive. Please sign up here: [link]"
+  images:
+    type: array
+    items:
+      type: string
+      format: uri
+      description: URL of the image.
+      example: "https://storage.campusnet.app/posts/pst_523e4567/image1.jpg"
+    maxItems: 10
+    nullable: true
+    description: List of images attached to the post.
+  links:
+    type: array
+    items:
+      type: string
+      format: uri
+      example: "https://example.com/relevant-article"
+    maxItems: 5
+    nullable: true
+    description: List of external links shared in the post.
+  tags:
+    type: array
+    items:
+      $ref: "./Tag.yaml"
+    maxItems: 10
+    nullable: true
+    description: Tags associated with the post for categorization and discovery.
+  status:
+    $ref: "./enums/PostStatusEnum.yaml"
+  isPublic:
+    type: boolean
+    description: If true, this post might be visible across different campuses (inter-university feed), subject to system configuration.
+    default: false
+    example: true
+  isPinned:
+    type: boolean
+    description: If true, this post is pinned to the top of its community/group feed.
+    default: false
+    example: false
+  isFeatured:
+    type: boolean
+    description: If true, this post is highlighted or featured by moderators.
+    default: false
+    example: false
+  viewCount:
+    type: integer
+    minimum: 0
+    readOnly: true
+    example: 1250
+  reactionCount:
+    type: integer
+    minimum: 0
+    readOnly: true
+    example: 75
+  commentCount:
+    type: integer
+    minimum: 0
+    readOnly: true
+    example: 12
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2024-02-15T14:30:00Z"
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2024-02-16T09:15:00Z"
+required:
+  - id
+  - author
+  - communityId
+  - groupId
+  - content
+  - status
+  - createdAt
+  - updatedAt

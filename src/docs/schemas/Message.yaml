@@ -1,0 +1,36 @@
+type: object
+description: Represents a direct message sent between two users.
+properties:
+    id:
+        type: string
+        format: uuid
+        readOnly: true
+        description: Unique identifier for the message.
+        example: "msg_c4d3e2b1-a89b-12d3-a456-426614174000"
+    sender:
+        $ref: "./User.yaml" # User who sent the message
+    recipient:
+        $ref: "./User.yaml" # User who received the message
+    content:
+        type: string
+        minLength: 1
+        maxLength: 5000 # Max length for a direct message
+        description: The textual content of the message.
+        example: "Hey, are you going to the tech talk on Friday?"
+    isRead:
+        type: boolean
+        default: false
+        description: Indicates if the recipient has read the message.
+        example: false
+    sentAt:
+        type: string
+        format: date-time
+        readOnly: true
+        description: Timestamp when the message was sent.
+        example: "2024-05-20T10:00:00Z"
+required:
+    - id
+    - sender
+    - recipient
+    - content
+    - sentAt

@@ -1,0 +1,13 @@
+type: object
+properties:
+  message:
+    type: string
+  data:
+    type: object
+    properties:
+      users:
+        type: array
+        items:
+          $ref: "../UserBase.yaml"
+  meta:
+    $ref: "../PaginationMetadata.yaml"

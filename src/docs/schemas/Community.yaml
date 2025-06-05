@@ -1,0 +1,70 @@
+type: object
+description: Represents a university-wide community (e.g., the main community for a university).
+properties:
+  id:
+    type: string
+    format: uuid
+    readOnly: true
+    example: "323e4567-e89b-12d3-a456-426614174000"
+  universityId:
+    type: string
+    format: uuid
+    description: Identifier of the university this community belongs to.
+    example: "223e4567-e89b-12d3-a456-426614174000"
+  name:
+    type: string
+    minLength: 3
+    maxLength: 255
+    description: Name of the community. Often reflects the university name.
+    example: "MTech University Hub"
+  description:
+    type: string
+    maxLength: 1000
+    nullable: true
+    description: Description of the community and its purpose.
+    example: "The central place for all students, faculty, and alumni of Metropolitan University of Technology to connect, share news, and find events."
+  logoUrl:
+    type: string
+    format: uri
+    nullable: true
+    description: URL for the community's logo.
+    example: "https://storage.campusnet.app/communities/com_323e4567_logo.png"
+  coverPhotoUrl:
+    type: string
+    format: uri
+    nullable: true
+    description: URL for the community's cover photo.
+    example: "https://storage.campusnet.app/communities/com_323e4567_cover.jpg"
+  isPublic:
+    type: boolean
+    description: Indicates if community content (posts, events) is visible to users outside the university (if inter-university features are enabled).
+    default: false # Typically, main university communities are restricted to their members
+    example: true
+  memberCount:
+    type: integer
+    minimum: 0
+    readOnly: true
+    description: Total number of members in this community.
+    example: 12500
+  createdBy: # User who initiated/admin who set up
+    type: string
+    format: uuid
+    readOnly: true
+    description: Identifier of the user (typically an admin) who created the community.
+    example: "usr_admin_system_id_example"
+  createdAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2022-06-01T10:00:00Z"
+  updatedAt:
+    type: string
+    format: date-time
+    readOnly: true
+    example: "2024-01-20T15:30:00Z"
+required:
+  - id
+  - universityId
+  - name
+  - createdBy
+  - createdAt

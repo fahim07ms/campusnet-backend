@@ -1,0 +1,34 @@
+type: object
+description: Metadata for paginated API responses.
+properties:
+    totalItems:
+        type: integer
+        format: int32
+        description: Total number of items available across all pages.
+        example: 127
+    itemCount: # How many items in the current page's data array
+        type: integer
+        format: int32
+        description: Number of items returned in the current page.
+        example: 20
+    itemsPerPage:
+        type: integer
+        format: int32
+        description: The number of items requested per page.
+        example: 20
+    totalPages:
+        type: integer
+        format: int32
+        description: Total number of pages available.
+        example: 7
+    currentPage:
+        type: integer
+        format: int32
+        description: The current page number (1-based index).
+        example: 1
+required:
+    - totalItems
+    - itemCount
+    - itemsPerPage
+    - totalPages
+    - currentPage

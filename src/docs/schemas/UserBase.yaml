@@ -1,0 +1,45 @@
+type: object
+description: Essential representation of a user, typically for embedding in other resources.
+properties:
+  id:
+    type: string
+    format: uuid
+    description: Unique identifier for the user.
+    example: "usr_123e4567-e89b-12d3-a456-426614174000"
+    readOnly: true
+  username:
+    type: string
+    description: Unique username for the user. Used for mentions and unique identification.
+    minLength: 3
+    maxLength: 30
+    pattern: '^[a-zA-Z0-9_.-]+$'
+    example: "jane.doe_23"
+  firstName:
+    type: string
+    description: User's first name.
+    minLength: 1
+    maxLength: 50
+    example: "Jane"
+  lastName:
+    type: string
+    description: User's last name.
+    minLength: 1
+    maxLength: 50
+    example: "Doe"
+  bio:
+    type: string
+  university_name:
+    type: string
+  university_logo:
+    type: string
+  profile_picture:
+    type: string
+    format: uri
+    description: URL to the user's profile picture/avatar.
+    nullable: true
+    example: "https://storage.campusnet.app/avatars/usr_123e4567.png"
+required:
+  - id
+  - username
+  - firstName
+  - lastName

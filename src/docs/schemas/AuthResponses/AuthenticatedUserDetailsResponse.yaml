@@ -1,0 +1,11 @@
+type: object
+description: Current authenticated user's details
+properties:
+  message:
+    type: string
+    example: "Authenticated user's data retrieved successfully"
+  data:
+    type: object
+    properties:
+      user:
+        $ref: "../UserWithProfile.yaml"

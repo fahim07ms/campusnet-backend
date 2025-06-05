@@ -10,9 +10,9 @@ info:
         email: xyz@campusnet.dev
 
 servers:
-    - url: http://localhost:3000/api/docs/v1
+    - url: http://localhost:3000/api/v1/
       description: Local server
-    - url: https://campusnet-api.onrender.com/api/docs/v1
+    - url: https://campusnet-api.onrender.com/api/v1/
       description: Production server
 
 tags:
@@ -119,7 +119,7 @@ components:
             schema:
                 type: string
                 format: uuid
-        PostIdParam:
+        postIdParam:
             name: postId
             in: path
             required: true
@@ -236,1688 +236,144 @@ components:
         # ENUMERATIONS
         # ----------------------
         UserRoleEnum:
-            type: string
-            enum: [student, alumni, admin]
+            $ref: "./schemas/enums/UserRoleEnum.yaml"
         EduLevelEnum:
-            type: string
-            enum: ["SSC/O-Level", "HSC/A-Level", "Undergrade", "Postgrad"]
+            $ref: "./schemas/enums/EduLevelEnum.yaml"
         CommunityRoleEnum:
-            type: string
-            enum: [admin, moderator, member]
+            $ref: "./schemas/enums/CommunityRoleEnum.yaml"
         PostStatusEnum:
-            type: string
-            enum: [pending, approved, rejected]
+            $ref: "./schemas/enums/PostStatusEnum.yaml"
         EventStatusEnum:
-            type: string
-            enum: [upcoming, ongoing, completed, cancelled]
+            $ref: "./schemas/enums/EventStatusEnum.yaml"
         ConnectionStatusEnum:
-            type: string
-            enum: [pending, accepted, rejected, blocked]
+            $ref: "./schemas/enums/ConnectionStatusEnum.yaml"
         ReactionTypeEnum:
-            type: string
-            enum: [like, love, laugh, sad, angry]
+            $ref: "./schemas/enums/ReactionTypeEnum.yaml"
         NotificationTypeEnum:
-            type: string
-            enum:
-                [
-                    post_approved,
-                    post_rejected,
-                    post_comment,
-                    post_reaction,
-                    comment_reaction,
-                    connection_accepted,
-                    connection_rejected,
-                    event_reminder,
-                    connection_request,
-                ]
+            $ref: "./schemas/enums/NotificationTypeEnum.yaml"
         RelatedEntityTypeName:
-            type: string
-            enum: [post, event, user, comment]
+            $ref: "./schemas/enums/RelatedEntityType.yaml"
 
         # Common Error Structure
         ErrorResponse:
-            type: object
-            description: Standard API error response structure.
-            properties:
-                error:
-                    type: string
-                    description: A unique, machine-readable error type.
-                    example: "validation_error"
-                code:
-                    type: integer
-                    description: A unique, machine-readable error code
-                    example: 401
-                message:
-                    type: string
-                    description: A human-readable summary of the error.
-                    example: "The request data failed validation."
-                details: # Array of specific field errors
-                    type: array
-                    items:
-                        type: object
-                        properties:
-                        field:
-                            type: string
-                            description: The specific field that caused the validation error.
-                            example: "email"
-                        message:
-                            type: string
-                            description: A detailed message about the error on this field.
-                            example: "Email address is already in use."
-                    nullable: true # Details might not always be present
-                    example:
-                        - field: "password"
-                          message: "Password must be at least 8 characters long."
-                        - field: "username"
-                          message: "Username can only contain alphanumeric characters and underscores."
-                timestamp:
-                    type: string
-                    format: date-time
-                    description: The date and time (ISO 8601 UTC) when the error occurred.
-                    example: "2024-05-30T14:30:00Z"
-            required:
-                - error
-                - code
-                - message
-                - timestamp
+            $ref: "./schemas/ErrorResponse.yaml"
+
+        # Common Model structure
+        UserWithProfile:
+            $ref: "./schemas/UserWithProfile.yaml"
+
+        UserBase:
+            $ref: "./schemas/UserBase.yaml"
 
         University:
-            type: object
-            description: Represents an academic institution within CampusNet.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    example: "223e4567-e89b-12d3-a456-426614174000"
-                name:
-                    type: string
-                    minLength: 3
-                    maxLength: 255
-                    description: Official name of the university.
-                    example: "Metropolitan University of Technology"
-                domain:
-                    type: string
-                    maxLength: 100
-                    pattern: '^[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'
-                    description: Official email domain of the university (e.g., 'mtech.edu'). Used for user verification.
-                    example: "mtech.edu"
-                location:
-                    type: string
-                    maxLength: 255
-                    nullable: true
-                    description: Physical location of the university (e.g., City, Country).
-                    example: "Techville, Innovaland"
-                establishedYear:
-                    type: integer
-                    nullable: true
-                    description: Year the university was established.
-                    example: 1985
-                description:
-                    type: string
-                    maxLength: 2000
-                    nullable: true
-                    description: A brief description or mission statement of the university.
-                    example: "A leading institution for science, engineering, and arts, fostering innovation and excellence."
-                logoUrl:
-                    type: string
-                    format: uri
-                    nullable: true
-                    description: URL to the university's official logo.
-                    example: "https://storage.campusnet.app/logos/uni_223e4567.png"
-                websiteUrl: # Added common field
-                    type: string
-                    format: uri
-                    nullable: true
-                    description: URL to the university's official website.
-                    example: "https://www.mtech.edu"
-                createdAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2020-01-01T00:00:00Z"
-                updatedAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2023-06-15T10:00:00Z"
-            required:
-                - id
-                - name
-                - domain
-                - establishedYear
-                - websiteUrl
-                - createdAt
+            $ref: "./schemas/University.yaml"
 
         User:
-            type: object
-            description: Detailed representation of a user account.
-            properties:
-            id:
-                type: string
-                format: uuid
-                description: Unique identifier for the user.
-                example: "123e4567-e89b-12d3-a456-426614174000"
-                readOnly: true
-            email:
-                type: string
-                format: email
-                description: User's primary email address (used for login and notifications).
-                example: "jane.doe@university.edu"
-            username:
-                type: string
-                description: Unique username for the user.
-                minLength: 3
-                maxLength: 30
-                pattern: "^[a-zA-Z0-9_.-]+$"
-                example: "jane.doe_23"
-            role:
-                $ref: "#/components/schemas/UserRoleEnum"
-            isVerified:
-                type: boolean
-                description: Indicates if the user's email address has been verified.
-                default: false
-                example: true
-            isActive:
-                type: boolean
-                description: Indicates if the user account is currently active or disabled.
-                default: true
-                example: true
-            universityId:
-                type: string
-                format: uuid
-                description: Identifier of the university the user is primarily associated with.
-                nullable: true
-                example: "223e4567-e89b-12d3-a456-426614174000"
-            lastLoginAt:
-                type: string
-                format: date-time
-                description: Timestamp of the user's last successful login.
-                nullable: true
-                readOnly: true
-                example: "2024-05-29T10:30:00Z"
-            createdAt:
-                type: string
-                format: date-time
-                description: Timestamp of when the user account was created.
-                readOnly: true
-                example: "2024-01-15T09:30:00Z"
-            updatedAt:
-                type: string
-                format: date-time
-                description: Timestamp of when the user account was last updated.
-                readOnly: true
-                example: "2024-05-15T11:00:00Z"
-            required:
-                - id
-                - email
-                - username
-                - role
-                - isVerified
-                - isActive
-                - createdAt
-                - updatedAt
+            $ref: "./schemas/User.yaml"
 
         UserProfile:
-            type: object
-            description: Comprehensive profile information for a user.
-            properties:
-            userId:
-                type: string
-                format: uuid
-                description: The unique identifier of the user this profile belongs to.
-                example: "123e4567-e89b-12d3-a456-426614174000"
-                readOnly: true
-            firstName:
-                type: string
-                minLength: 1
-                maxLength: 50
-                description: User's first name.
-                example: "Jane"
-            lastName:
-                type: string
-                minLength: 1
-                maxLength: 50
-                description: User's last name.
-                example: "Doe"
-            avatarUrl:
-                type: string
-                format: uri
-                nullable: true
-                description: URL to the user's profile picture.
-                example: "https://storage.campusnet.app/avatars/usr_123e4567.png"
-            coverPhotoUrl:
-                type: string
-                format: uri
-                nullable: true
-                description: URL to the user's profile cover photo.
-                example: "https://storage.campusnet.app/covers/usr_123e4567.jpg"
-            bio:
-                type: string
-                maxLength: 500
-                nullable: true
-                description: A short biography or description about the user.
-                example: "Computer Science enthusiast, passionate about open source and AI. Third year student at University of Technology."
-            birthDate:
-                type: string
-                format: date
-                nullable: true
-                description: User's date of birth (YYYY-MM-DD). Privacy settings may apply.
-                example: "2002-08-15"
-            phone:
-                type: string
-                maxLength: 20
-                nullable: true
-                pattern: '^\+?[1-9]\d{1,14}$'
-                description: User's phone number. Privacy settings apply.
-                example: "+11234567890"
-            studentId:
-                type: string
-                maxLength: 50
-                nullable: true
-                description: User's official student identifier, if applicable.
-                example: "STU-2022-00123"
-            department:
-                type: string
-                maxLength: 100
-                nullable: true
-                description: User's academic department.
-                example: "Dept. of Computer Science & Engineering"
-            graduationYear:
-                type: integer
-                nullable: true
-                description: User's expected or actual year of graduation.
-                example: 2025
-            interests:
-                type: array
-                items:
-                    type: string
-                    minLength: 1
-                    maxLength: 50
-                    maxItems: 15
-                    nullable: true
-                description: A list of user's interests or hobbies.
-                example: ["AI", "Web Development", "Hiking", "Photography"]
-            address:
-                type: string
-                maxLength: 255
-                nullable: true
-                description: User's physical address (city, country, etc.)
-                example: "123 University Ave, Tech City, TC 54321"
-            required:
-                - userId
-                - firstName
-                - lastName
-
-        UserWithProfile:
-            allOf:
-                - $ref: "#/components/schemas/User"
-                - type: object
-                  properties:
-                      profile:
-                          $ref: "#/components/schemas/UserProfile"
+            $ref: "./schemas/UserProfile.yaml"
 
         Education:
-            type: object
-            description: Represents an educational qualification or period of study for a user.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    example: "a23e4567-e89b-12d3-a456-426614174000"
-                userId:
-                    type: string
-                    format: uuid
-                    description: Identifier of the user this education entry belongs to.
-                    example: "123e4567-e89b-12d3-a456-426614174000"
-                level:
-                    $ref: "#/components/schemas/EduLevelEnum"
-                institution:
-                    type: string
-                    maxLength: 255
-                    description: Name of the educational institution.
-                    example: "University of Technology"
-                degree:
-                    type: string
-                    maxLength: 100
-                    nullable: true
-                    description: Name of the degree obtained or being pursued (e.g., B.Sc., M.A.).
-                    example: "Bachelor of Science"
-                fieldOfStudy:
-                    type: string
-                    maxLength: 100
-                    nullable: true
-                    description: Major or field of study.
-                    example: "Computer Science"
-                startDate:
-                    type: string
-                    format: date
-                    nullable: true
-                    description: Start date of the study period (YYYY-MM-DD).
-                    example: "2021-09-01"
-                endDate:
-                    type: string
-                    format: date
-                    nullable: true
-                    description: End date of the study period or expected graduation date (YYYY-MM-DD).
-                    example: "2025-06-30"
-            required:
-                - id
-                - userId
-                - level
-                - institutionName
+            $ref: "./schemas/Education.yaml"
 
         Achievement:
-            type: object
-            description: Represents a user's achievement, award, or certification.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    example: "b23e4567-e89b-12d3-a456-426614174000"
-                userId:
-                    type: string
-                    format: uuid
-                    description: Identifier of the user this achievement belongs to.
-                    example: "123e4567-e89b-12d3-a456-426614174000"
-                title:
-                    type: string
-                    maxLength: 255
-                    description: Title of the achievement or award.
-                    example: "Winner - National Programming Contest 2023"
-                issuedBy:
-                    type: string
-                    maxLength: 255
-                    nullable: true
-                    description: Organization or entity that issued the achievement.
-                    example: "National Coding Society"
-                achieved_at:
-                    type: string
-                    format: date
-                    nullable: true
-                    description: Date when the achievement was issued or earned (YYYY-MM-DD).
-                    example: "2023-11-20"
-                description:
-                    type: string
-                    nullable: true
-                    description: Detailed description of the achievement.
-                    example: "Secured first place among 500 participants in a 24-hour coding competition focused on algorithmic problem-solving."
-            required:
-                - id
-                - userId
-                - title
-                - issuedBy
-                - achieved_at
+            $ref: "./schemas/Achievement.yaml"
 
         Community:
-            type: object
-            description: Represents a university-wide community (e.g., the main community for a university).
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    example: "323e4567-e89b-12d3-a456-426614174000"
-                universityId:
-                    type: string
-                    format: uuid
-                    description: Identifier of the university this community belongs to.
-                    example: "223e4567-e89b-12d3-a456-426614174000"
-                name:
-                    type: string
-                    minLength: 3
-                    maxLength: 255
-                    description: Name of the community. Often reflects the university name.
-                    example: "MTech University Hub"
-                description:
-                    type: string
-                    maxLength: 1000
-                    nullable: true
-                    description: Description of the community and its purpose.
-                    example: "The central place for all students, faculty, and alumni of Metropolitan University of Technology to connect, share news, and find events."
-                logoUrl:
-                    type: string
-                    format: uri
-                    nullable: true
-                    description: URL for the community's logo.
-                    example: "https://storage.campusnet.app/communities/com_323e4567_logo.png"
-                coverPhotoUrl:
-                    type: string
-                    format: uri
-                    nullable: true
-                    description: URL for the community's cover photo.
-                    example: "https://storage.campusnet.app/communities/com_323e4567_cover.jpg"
-                isPublic:
-                    type: boolean
-                    description: Indicates if community content (posts, events) is visible to users outside the university (if inter-university features are enabled).
-                    default: false # Typically, main university communities are restricted to their members
-                    example: true
-                memberCount:
-                    type: integer
-                    minimum: 0
-                    readOnly: true
-                    description: Total number of members in this community.
-                    example: 12500
-                createdBy: # User who initiated/admin who set up
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    description: Identifier of the user (typically an admin) who created the community.
-                    example: "usr_admin_system_id_example"
-                createdAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2022-06-01T10:00:00Z"
-                updatedAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2024-01-20T15:30:00Z"
-            required:
-                - id
-                - universityId
-                - name
-                - createdBy
-                - createdAt
+            $ref: "./schemas/Community.yaml"
 
         CommunityMember:
-            type: object
-            description: Represents a user's membership in a community.
-            properties:
-                user:
-                    $ref: "#/components/schemas/User"
-                communityId:
-                    type: string
-                    format: uuid
-                    example: "323e4567-e89b-12d3-a456-426614174000"
-                role:
-                    $ref: "#/components/schemas/CommunityRoleEnum"
-                joinedAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2022-08-10T14:20:00Z"
-            required:
-                - user
-                - communityId
-                - role
+            $ref: "./schemas/CommunityMember.yaml"
 
         Group:
-            type: object
-            description: Represents a student-led group or club within a community.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    example: "423e4567-e89b-12d3-a456-426614174000"
-                communityId:
-                    type: string
-                    format: uuid
-                    description: Identifier of the parent community this group belongs to.
-                    example: "323e4567-e89b-12d3-a456-426614174000"
-                name:
-                    type: string
-                    minLength: 3
-                    maxLength: 255
-                    description: Name of the group.
-                    example: "AI Enthusiasts Club"
-                description:
-                    type: string
-                    maxLength: 2000
-                    nullable: true
-                    description: Detailed description of the group, its mission, and activities.
-                    example: "A club for students passionate about Artificial Intelligence. We host weekly discussions, workshops, and guest speaker sessions."
-                logoUrl:
-                    type: string
-                    format: uri
-                    nullable: true
-                    description: URL for the group's logo.
-                    example: "https://storage.campusnet.app/groups/grp_423e4567_logo.png"
-                coverPhotoUrl:
-                    type: string
-                    format: uri
-                    nullable: true
-                    description: URL for the group's cover photo.
-                    example: "https://storage.campusnet.app/groups/grp_423e4567_cover.jpg"
-                isPublic:
-                    type: boolean
-                    description: If true, the group is visible to all community members. If false, it might be invite-only or hidden.
-                    default: true
-                    example: true
-                memberApprovalRequired:
-                    type: boolean
-                    description: If true, new members require approval from group admins/moderators to join.
-                    default: false
-                    example: false
-                postApprovalRequired:
-                    type: boolean
-                    description: If true, posts made within the group require approval from group admins/moderators before becoming visible.
-                    default: false
-                    example: false
-                rules: # From original schema
-                    type: string
-                    maxLength: 5000 # Generous space for rules
-                    nullable: true
-                    description: Rules and guidelines for group members.
-                    example: "1. Be respectful to all members.\n2. Keep discussions relevant to AI.\n3. No spam or self-promotion without approval."
-                memberCount:
-                    type: integer
-                    minimum: 0
-                    readOnly: true
-                    description: Total number of members in this group.
-                    example: 75
-                createdBy:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    description: Identifier of the user who created the group.
-                    example: "123e4567-e89b-12d3-a456-426614174000"
-                createdAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2023-09-01T11:00:00Z"
-                updatedAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2024-03-10T18:45:00Z"
-            required:
-                - id
-                - communityId
-                - name
-                - createdBy
-                - createdAt
+            $ref: "./schemas/Group.yaml"
 
         GroupMember:
-            type: object
-            description: Represents a user's membership in a group.
-            properties:
-                user:
-                    $ref: "#/components/schemas/User"
-                groupId:
-                    type: string
-                    format: uuid
-                    example: "423e4567-e89b-12d3-a456-426614174000"
-                role:
-                    $ref: "#/components/schemas/CommunityRoleEnum" # Reusing for group roles
-                joinedAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2023-09-05T10:00:00Z"
-            required:
-                - user
-                - groupId
-                - role
+            $ref: "./schemas/GroupMember.yaml"
 
         Tag:
-            type: object
-            description: Represents a tag used for categorizing content like posts and events.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    example: "abc123e4-e89b-12d3-a456-426614174000"
-                name:
-                    type: string
-                    minLength: 1
-                    maxLength: 50
-                    pattern: '^[a-zA-Z0-9-#]+$' # Allow letters, numbers, hyphens, hash
-                    description: The tag name. Should be unique (case-insensitive).
-                    example: "artificial-intelligence"
-                createdAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    description: Tag creation time
-            required:
-                - id
-                - name
+            $ref: "./schemas/Tag.yaml"
 
         Post:
-            type: object
-            description: Represents a user-generated post, announcement, or piece of news.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    example: "523e4567-e89b-12d3-a456-426614174000"
-                author:
-                    $ref: '#/components/schemas/User'
-                communityId:
-                    type: string
-                    format: uuid
-                    nullable: true
-                    description: Identifier of the community this post belongs to (if not in a group).
-                    example: "323e4567-e89b-12d3-a456-426614174000"
-                groupId:
-                    type: string
-                    format: uuid
-                    nullable: true
-                    description: Identifier of the group this post belongs to.
-                    example: "423e4567-e89b-12d3-a456-426614174000"
-                content:
-                    type: string
-                    minLength: 1
-                    maxLength: 10000
-                    description: Main textual content of the post. Can support markdown.
-                    example: "Hello everyone! We're looking for volunteers for our annual charity drive. Please sign up here: [link]"
-                images:
-                    type: array
-                    items:
-                        type: string
-                        format: uri
-                        description: URL of the image.
-                        example: "https://storage.campusnet.app/posts/pst_523e4567/image1.jpg"
-                    maxItems: 10
-                    nullable: true
-                    description: List of images attached to the post.
-                links:
-                    type: array
-                    items:
-                        type: string
-                        format: uri
-                        example: "https://example.com/relevant-article"
-                    maxItems: 5
-                    nullable: true
-                    description: List of external links shared in the post.
-                tags:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/Tag'
-                    maxItems: 10
-                    nullable: true
-                    description: Tags associated with the post for categorization and discovery.
-                status:
-                    $ref: '#/components/schemas/PostStatusEnum'
-                isPublic:
-                    type: boolean
-                    description: If true, this post might be visible across different campuses (inter-university feed), subject to system configuration.
-                    default: false
-                    example: true
-                isPinned:
-                    type: boolean
-                    description: If true, this post is pinned to the top of its community/group feed.
-                    default: false
-                    example: false
-                isFeatured:
-                    type: boolean
-                    description: If true, this post is highlighted or featured by moderators.
-                    default: false
-                    example: false
-                viewCount:
-                    type: integer
-                    minimum: 0
-                    readOnly: true
-                    example: 1250
-                reactionCount:
-                    type: integer
-                    minimum: 0
-                    readOnly: true
-                    example: 75
-                commentCount:
-                    type: integer
-                    minimum: 0
-                    readOnly: true
-                    example: 12
-                createdAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2024-02-15T14:30:00Z"
-                updatedAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2024-02-16T09:15:00Z"
-            required:
-                - id
-                - author
-                - communityId
-                - groupId
-                - content
-                - status
-                - createdAt
-                - updatedAt
+            $ref: "./schemas/Post.yaml"
 
         Event:
-            type: object
-            description: Represents a campus event, workshop, meeting, or activity.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    example: "evt_623e4567-e89b-12d3-a456-426614174000"
-                organizer:
-                    $ref: '#/components/schemas/User'
-                communityId:
-                    type: string
-                    format: uuid
-                    nullable: true
-                    description: Identifier of the community hosting this event.
-                    example: "323e4567-e89b-12d3-a456-426614174000"
-                groupId:
-                    type: string
-                    format: uuid
-                    nullable: true
-                    description: Identifier of the group hosting this event.
-                    example: "423e4567-e89b-12d3-a456-426614174000"
-                title:
-                    type: string
-                    minLength: 3
-                    maxLength: 150 # Slightly longer than user example
-                    description: Title of the event.
-                    example: "Annual Campus Tech Symposium 2024"
-                description:
-                    type: string
-                    maxLength: 5000 # More space for event details
-                    nullable: true
-                    description: Detailed description of the event, including agenda, speakers, etc. Can support markdown.
-                    example: "Join us for three days of insightful talks, hands-on workshops, and networking opportunities with leaders in the tech industry. Keynote by Dr. Quantum Entanglement."
-                startDate:
-                    type: string
-                    format: date-time # Full timestamp
-                    description: Start date and time of the event.
-                    example: "2024-10-22T09:00:00Z"
-                endDate:
-                    type: string
-                    format: date-time # Full timestamp
-                    nullable: true # Optional for single-day or instantaneous events
-                    description: End date and time of the event.
-                    example: "2024-10-24T17:00:00Z"
-                location:
-                    type: string
-                    maxLength: 255
-                    nullable: true
-                    description: Physical location of the event (e.g., Room, Building, Address).
-                    example: "Grand Auditorium, Innovation Hall, 1 Tech Park Drive"
-                isOnline:
-                    type: boolean
-                    description: Indicates if the event is hosted online.
-                    default: false
-                    example: false
-                onlineEventUrl:
-                    type: string
-                    format: uri
-                    nullable: true
-                    description: URL for joining the online event (e.g., Zoom, Teams link).
-                    example: "https://zoom.us/j/1234567890"
-                venueDetails:
-                    type: string
-                    maxLength: 500
-                    nullable: true
-                    description: Additional details about the venue, like parking or accessibility.
-                    example: "Parking available in Lot C. Main entrance is wheelchair accessible."
-                coverImageUrl:
-                    type: string
-                    format: uri
-                    nullable: true
-                    description: URL for the event's cover image or banner.
-                    example: "https://storage.campusnet.app/events/evt_623e4567_cover.jpg"
-                tags:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/Tag'
-                    maxItems: 10
-                    nullable: true
-                status:
-                    $ref: '#/components/schemas/EventStatusEnum'
-                isPublic:
-                    type: boolean
-                    description: If true, this event might be visible across campuses or to the public, depending on system settings.
-                    default: true
-                    example: true
-                maxAttendees:
-                    type: integer
-                    minimum: 1
-                    nullable: true
-                    description: Maximum number of attendees allowed. Null for unlimited.
-                    example: 200
-                attendeeCount:
-                    type: integer
-                    minimum: 0
-                    readOnly: true
-                    description: Number of users confirmed as 'attending'.
-                    example: 115
-                interestedCount: # From original schema
-                    type: integer
-                    minimum: 0
-                    readOnly: true
-                    description: Number of users marked as 'interested'.
-                    example: 45
-                createdAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2024-04-01T10:00:00Z"
-                updatedAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2024-05-15T16:30:00Z"
-            required:
-                - id
-                - organizer
-                - title
-                - description
-                - startDate
-                - endDate
-                - status
-                - createdAt
+            $ref: "./schemas/Event.yaml"
 
         EventAttendee:
-            type: object
-            description: Represents a user's attendance status for an event.
-            properties:
-                user:
-                    $ref: '#/components/schemas/User'
-                eventId:
-                    type: string
-                    format: uuid
-                    example: "evt_623e4567-e89b-12d3-a456-426614174000"
-                status:
-                    type: string
-                    enum: [ attending, interested ]
-                    description: User's RSVP status for the event.
-                    example: "attending"
-                joinedAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    description: Timestamp when the user registered their status.
-                    example: "2024-04-10T11:00:00Z"
-            required:
-                - user
-                - eventId
-                - status
-                - joinedAt
+            $ref: "./schemas/EventAttendee.yaml"
 
         PollOption:
-            type: object
-            description: An option within a poll that users can vote for.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    example: "1a2b3c4d-e89b-12d3-a456-426614174000"
-                pollId:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    example: "1a2b3c4d-e89b-12d3-a456-426614174000"
-                optionText:
-                    type: string
-                    minLength: 1
-                    maxLength: 255
-                    description: The text content of the poll option.
-                    example: "Spring Semester Break"
-                voteCount:
-                    type: integer
-                    minimum: 0
-                    readOnly: true
-                    description: Number of votes received by this option. (Only visible when results are public).
-                    example: 42
-            required:
-                - id
-                - pollId
-                - text
+            $ref: "./schemas/PollOption.yaml"
 
         Poll:
-            type: object
-            description: Represents a poll for gathering opinions or making decisions.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    example: "723e4567-e89b-12d3-a456-426614174000"
-                creator:
-                    $ref: '#/components/schemas/User'
-                communityId:
-                    type: string
-                    format: uuid
-                    nullable: true
-                    example: "com_323e4567-e89b-12d3-a456-426614174000"
-                groupId:
-                    type: string
-                    format: uuid
-                    nullable: true
-                    example: "grp_423e4567-e89b-12d3-a456-426614174000"
-                question:
-                    type: string
-                    minLength: 1
-                    description: The main question of the poll.
-                    example: "When should we schedule the next club meeting?"
-                description:
-                    type: string
-                    maxLength: 1000
-                    nullable: true
-                    description: Additional context or description for the poll.
-                    example: "Please vote for your preferred day. The meeting will cover planning for the upcoming semester."
-                options:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/PollOption'
-                    minItems: 2
-                    maxItems: 10 
-                    description: List of options users can vote for.
-                deadline:
-                    type: string
-                    format: date-time
-                    nullable: true
-                    description: Timestamp when voting for the poll ends. Null for no deadline.
-                    example: "2024-06-10T23:59:59Z"
-                isPublic:
-                    type: boolean
-                    default: true
-                allowMultipleVotes:
-                    type: boolean
-                    description: If true, users can select multiple options.
-                    default: false
-                    example: false
-                showResultsBeforeDeadline:
-                    type: boolean
-                    description: If true, results are visible to voters before the deadline. Otherwise, only after the deadline or if the creator makes them public.
-                    default: false
-                    example: true
-                status:
-                    $ref: '#/components/schemas/PostStatusEnum'
-                    description: Approval status if polls require moderation.
-                totalVotes:
-                    type: integer
-                    minimum: 0
-                    readOnly: true
-                    description: Total number of votes cast in this poll.
-                    example: 150
-                createdAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2024-06-01T09:00:00Z"
-                updatedAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2024-06-01T09:00:00Z"
-            required:
-                - id
-                - creator
-                - question
-                - options
-                - status
-                - createdAt
-        
+            $ref: "./schemas/Poll.yaml"
+
         PollVote:
-            type: object
-            description: Records a user's vote on a specific poll option.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    description: Unique identifier for the vote record.
-                    example: "a1b2c3d4-e89b-12d3-a456-426614174000"
-                pollId:
-                    type: string
-                    format: uuid
-                    description: Identifier of the poll this vote belongs to.
-                    example: "723e4567-e89b-12d3-a456-426614174000"
-                userId:
-                    type: string
-                    format: uuid
-                    description: Identifier of the user who cast the vote.
-                    example: "123e4567-e89b-12d3-a456-426614174000"
-                pollOptionId:
-                    type: string
-                    format: uuid
-                    description: Identifier of the poll option selected by the user.
-                    example: "1a2b3c4d-e89b-12d3-a456-426614174000"
-                votedAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    description: Timestamp when the vote was cast.
-                    example: "2024-06-02T10:30:00Z"
-            required:
-                - id
-                - pollId
-                - userId
-                - pollOptionId
-                - votedAt
-        
+            $ref: "./schemas/PollVote.yaml"
+
         Comment:
-            type: object
-            description: Represents a comment made by a user on a post or event.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    description: Unique identifier for the comment.
-                    example: "823e4567-e89b-12d3-a456-426614174000"
-                author:
-                    $ref: '#/components/schemas/User' 
-                postId:
-                    type: string
-                    format: uuid
-                    nullable: true
-                    description: Identifier of the post this comment belongs to (if applicable).
-                    example: "523e4567-e89b-12d3-a456-426614174000"
-                eventId:
-                    type: string
-                    format: uuid
-                    nullable: true
-                    description: Identifier of the event this comment belongs to (if applicable).
-                    example: "623e4567-e89b-12d3-a456-426614174000"
-                parentId:
-                    type: string
-                    format: uuid
-                    nullable: true
-                    description: Identifier of the parent comment if this is a reply.
-                    example: "parent_comment_id_example"
-                content:
-                    type: string
-                    minLength: 1
-                    maxLength: 2000 
-                    description: The textual content of the comment. Can support limited markdown.
-                    example: "Great post! I totally agree with your points."
-                likeCount: 
-                    type: integer
-                    minimum: 0
-                    default: 0
-                    readOnly: true
-                    example: 15
-                replies:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/Comment' 
-                    nullable: true
-                    description: A list of replies to this comment.
-                    readOnly: true # Replies are typically fetched as part of the comment or via a separate endpoint
-                createdAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2024-02-15T15:00:00Z"
-                updatedAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    example: "2024-02-15T15:05:00Z"
-            required:
-                - id
-                - author
-                - content
-                - createdAt
-                # postId or eventId should be conditionally required based on context,
-                # but OpenAPI doesn't easily support this. Backend validation is key.
-        
+            $ref: "./schemas/Comment.yaml"
+
         Reaction:
-        type: object
-        description: Represents a reaction (e.g., like, love) from a user to a post or comment.
-        properties:
-            id:
-                type: string
-                format: uuid
-                readOnly: true
-                description: Unique identifier for the reaction.
-                example: "def456a1-e89b-12d3-a456-426614174000"
-            user:
-                $ref: '#/components/schemas/User'
-            postId:
-                type: string
-                format: uuid
-                nullable: true
-                description: Identifier of the post being reacted to (if applicable).
-                example: "pst_523e4567-e89b-12d3-a456-426614174000"
-            commentId:
-                type: string
-                format: uuid
-                nullable: true
-                description: Identifier of the comment being reacted to (if applicable).
-                example: "cmt_823e4567-e89b-12d3-a456-426614174000"
-            reactionType:
-                $ref: '#/components/schemas/ReactionTypeEnum'
-            createdAt:
-                type: string
-                format: date-time
-                readOnly: true
-                example: "2024-02-15T15:10:00Z"
-        required:
-            - id
-            - user
-            - reactionType
-            - createdAt
-            # postId or commentId should be conditionally required.
+            $ref: "./schemas/Reaction.yaml"
 
         UserConnection:
-            type: object
-            description: Represents a connection or relationship between two users.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    description: Unique identifier for the connection record.
-                    example: "con_f1e2d3c4-b89b-12d3-a456-426614174000"
-                requester: # User who initiated the connection
-                    $ref: '#/components/schemas/User'
-                recipient: # User who received the connection request
-                    $ref: '#/components/schemas/User'
-                status:
-                    $ref: '#/components/schemas/ConnectionStatusEnum'
-                requestedAt: # When the request was made
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    description: Timestamp when the connection request was initiated.
-                    example: "2024-05-01T12:00:00Z"
-                updatedAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    description: Timestamp of the last update to the connection status.
-                    example: "2024-05-01T14:30:00Z"
-            required:
-                - id
-                - requester
-                - recipient
-                - status
-                - requestedAt
+            $ref: "./schemas/UserConnection.yaml"
 
         Message:
-            type: object
-            description: Represents a direct message sent between two users.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    description: Unique identifier for the message.
-                    example: "msg_c4d3e2b1-a89b-12d3-a456-426614174000"
-                sender:
-                    $ref: '#/components/schemas/User' # User who sent the message
-                recipient:
-                    $ref: '#/components/schemas/User' # User who received the message
-                content:
-                    type: string
-                    minLength: 1
-                    maxLength: 5000 # Max length for a direct message
-                    description: The textual content of the message.
-                    example: "Hey, are you going to the tech talk on Friday?"
-                isRead:
-                    type: boolean
-                    default: false
-                    description: Indicates if the recipient has read the message.
-                    example: false
-                sentAt: 
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    description: Timestamp when the message was sent.
-                    example: "2024-05-20T10:00:00Z"
-            required:
-                - id
-                - sender
-                - recipient
-                - content
-                - sentAt
-        
+            $ref: "./schemas/Message.yaml"
+
         Conversation:
-            type: object
-            description: Represents a summary of a direct message conversation with another user.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    description: Unique identifier for the conversation.
-                    example: "c4d3e2b1-a89b-12d3-a456-426614174000"
-                withUser: 
-                    $ref: '#/components/schemas/User'
-                lastMessage:
-                    $ref: '#/components/schemas/Message' # The most recent message in the conversation
-                    nullable: true # Could be a new conversation with no messages yet
-                unreadCount:
-                    type: integer
-                    minimum: 0
-                    description: Number of unread messages from `withUser` for the authenticated user.
-                    example: 3
-                lastActivityAt: # Timestamp of the last message
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    description: Timestamp of the last activity (last message sent) in this conversation.
-                    example: "2024-05-28T15:30:00Z"
-                createdAt:
-                    type: string
-                    format: date-time
-                    description: Time when first conversation started
-                    example: "2024-05-28T15:30:00Z"
-            required:
-                - id
-                - withUser
-                - unreadCount
-                - lastActivityAt
+            $ref: "./schemas/Conversation.yaml"
 
         Notification:
-            type: object
-            description: Represents a notification for a user about an activity or event.
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    readOnly: true
-                    description: Unique identifier for the notification.
-                    example: "923e4567-e89b-12d3-a456-426614174000"
-                userId: 
-                    type: string
-                    format: uuid
-                    description: Identifier of the user who is the recipient of this notification.
-                    example: "123e4567-e89b-12d3-a456-426614174000"
-                type:
-                    $ref: '#/components/schemas/NotificationTypeEnum'
-                sender: # User who triggered the notification, if applicable
-                    $ref: '#/components/schemas/User'
-                    nullable: true # Some notifications might be system-generated
-                content:
-                    type: string
-                    maxLength: 500
-                    description: The main text content of the notification.
-                    example: "John Doe commented on your post: 'Annual Tech Symposium 2024'."
-                relatedEntityId:
-                    type: string
-                    format: uuid
-                    nullable: true
-                    description: Identifier of the entity this notification is related to (e.g., post ID, event ID, user ID of sender).
-                    example: "523e4567-e89b-12d3-a456-426614174000"
-                relatedEntityType:
-                    $ref: '#/components/schemas/RelatedEntityTypeName'
-                    nullable: true
-                isRead:
-                    type: boolean
-                    default: false
-                    description: Indicates if the recipient has read the notification.
-                    example: false
-                createdAt:
-                    type: string
-                    format: date-time
-                    readOnly: true
-                    description: Timestamp when the notification was created.
-                    example: "2024-05-25T11:00:00Z"
-            required:
-                - id
-                - recipientId
-                - type
-                - content
-                - relatedEntityId
-                - relatedEntityType
-        
+            $ref: "./schemas/Notification.yaml"
+
         PaginationMetadata:
-            type: object
-            description: Metadata for paginated API responses.
-            properties:
-                totalItems:
-                    type: integer
-                    format: int32
-                    description: Total number of items available across all pages.
-                    example: 127
-                itemCount: # How many items in the current page's data array
-                    type: integer
-                    format: int32
-                    description: Number of items returned in the current page.
-                    example: 20
-                itemsPerPage:
-                    type: integer
-                    format: int32
-                    description: The number of items requested per page.
-                    example: 20
-                totalPages:
-                    type: integer
-                    format: int32
-                    description: Total number of pages available.
-                    example: 7
-                currentPage:
-                    type: integer
-                    format: int32
-                    description: The current page number (1-based index).
-                    example: 1
-            required:
-                - totalItems
-                - itemCount
-                - itemsPerPage
-                - totalPages
-                - currentPage
+            $ref: "./schemas/PaginationMetadata.yaml"
 
-        SuccessMessageResponse:
+        PaginatedResponseBase:
             type: object
-            description: Generic success response with a message.
             properties:
-                message:
-                    type: string
-                    example: "Operation completed successfully."
-                data: # Changed to object as per user's example for AuthToken response
-                    type: array
-                    items:
-                        type: object
-                        nullable: true
-                        additionalProperties: true # Allows for flexible data payload
-                    example: [
-                        {
-                            id: "res_some_resource_id",
-                            status: "updated"
-                        }
-                    ]
+                meta:
+                    $ref: "#/components/schemas/PaginationMetadata"
             required:
-                - message
-                - data
+                - meta
 
-        AuthToken: 
-            type: object
-            description: Represents the JWT access and refresh tokens.
-            properties:
-                accessToken:
-                    type: string
-                    description: JWT access token used for authorizing API requests.
-                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfMTIzZTQ1NjciLCJyb2xlIjoic3R1ZGVudCIsImV4cCI6MTcxNzEwNzQwMH0.example_access_token_signature"
-                refreshToken:
-                    type: string
-                    description: Token used to obtain a new access token when the current one expires. Store securely.
-                    nullable: true # Refresh token might not always be issued or might be httpOnly cookie
-                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfMTIzZTQ1NjciLCJzY29wZSI6InJlZnJlc2giLCJleHAiOjE3MTk3MDQwMDB9.example_refresh_token_signature"
-                expiresIn:
-                    type: integer
-                    description: The validity duration of the access token in seconds from the time of issuance.
-                    example: 3600
-                tokenType:
-                    type: string
-                    description: Type of the token, typically "Bearer".
-                    example: "Bearer"
-            required:
-                - accessToken
-                - expiresIn
-                - tokenType
-                
-        AuthenticatedUserResponse: # For login/register responses
-            type: object
-            description: Response payload after successful authentication or registration.
-            properties:
-                tokens:
-                    $ref: '#/components/schemas/AuthToken'
-                user:
-                    $ref: '#/components/schemas/User'
-            required:
-                - tokens
-                - user
+        SuccessMessage:
+            $ref: "./schemas/SuccessMessage.yaml"
+            
+        AuthToken:
+            $ref: "./schemas/AuthToken.yaml"
 
+        # /auth requests
         AuthRegisterRequest:
-            type: object
-            description: Information required for new user registration.
-            properties:
-                firstName:
-                    type: string
-                    minLength: 1
-                    maxLength: 50
-                    description: User's first name.
-                    example: "Sarah"
-                lastName:
-                    type: string
-                    minLength: 1
-                    maxLength: 50
-                    description: User's last name.
-                    example: "Connor"
-                username:
-                    type: string
-                    minLength: 3
-                    maxLength: 30
-                    pattern: '^[a-zA-Z0-9_.-]+$'
-                    description: Desired unique username.
-                    example: "sarah.connor88"
-                email:
-                    type: string
-                    format: email
-                    description: User's email address for registration and communication. Must be unique.
-                    example: "sarah.connor@mtech.edu"
-                password:
-                    type: string
-                    format: password
-                    minLength: 8
-                    maxLength: 100
-                    description: User's chosen password. Should meet complexity requirements.
-                    # pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$' # Example strong password pattern
-                    example: "FutureSecure123!"
-                confirm-password:
-                    type: string
-                    format: password
-                    minLength: 8
-                    maxLength: 100
-                    description: User's chosen password confirmation. Should match the password previously entered.
-                    # pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$' # Example strong password pattern
-                    example: "FutureSecure123!"
-            required:
-                - firstName
-                - lastName
-                - username
-                - email
-                - password
-                - confirm-password
+            $ref: "./schemas/requests/AuthRegisterRequest.yaml"
 
         AuthLoginRequest:
-            type: object
-            description: Credentials for user login.
-            properties:
-                email:
-                    type: string
-                    format: email
-                    description: User's registered email address.
-                    example: "jane.doe@university.edu"
-                password:
-                    type: string
-                    format: password
-                    minLength: 8
-                    description: User's password.
-                    example: "Password123!"
-            required:
-                - email
-                - password
+            $ref: "./schemas/requests/AuthLoginRequest.yaml"
 
-        AuthTokenResponse:
-            type: object
-            properties:
-                accessToken:
-                    type: string
-                refreshToken:
-                    type: string
-                    nullable: true # Depending on your refresh token strategy
-                user:
-                    $ref: "#/components/schemas/User"
-
-        VerifyEmailRequest:
-            type: object
-            properties:
-                token:
-                    type: string
-            required:
-                - token
-
-        ResendVerificationEmailRequest:
-            type: object
-            properties:
-                email:
-                    type: string
-                    format: email
-            required:
-                - email
-
-        ForgotPasswordRequest:
-            type: object
-            properties:
-                email:
-                    type: string
-                    format: email
-            required:
-                - email
+        EmailOnlyRequest:
+            $ref: "./schemas/requests/EmailOnlyRequest.yaml"
 
         ResetPasswordRequest:
-            type: object
-            properties:
-                token:
-                    type: string
-                newPassword:
-                    type: string
-                    format: password
-                    minLength: 8
-            required:
-                - token
-                - newPassword
+            $ref: "./schemas/requests/ResetPasswordRequest.yaml"
 
-        RefreshTokenRequest:
-            type: object
-            properties:
-                refreshToken:
-                    type: string
-            required:
-                - refreshToken
-
-        UserUpdateRequest:
-            type: object
-            properties:
-                username:
-                    type: string
-                    maxLength: 50
-                email:
-                    type: string
-                    format: email # Might require re-verification
-
+        # /users requests
         ChangePasswordRequest:
-            type: object
-            properties:
-                currentPassword:
-                    type: string
-                    format: password
-                newPassword:
-                    type: string
-                    format: password
-                    minLength: 8
-            required:
-                - currentPassword
-                - newPassword
+            $ref: "./schemas/requests/ChangePasswordRequest.yaml"
 
+        # /users/me/profile requests
         UserProfileUpdateRequest:
-            type: object
-            properties:
-                firstName:
-                    type: string
-                    maxLength: 100
-                lastName:
-                    type: string
-                    maxLength: 100
-                profilePicture:
-                    type: string
-                    format: url
-                    nullable: true
-                coverPhoto:
-                    type: string
-                    format: url
-                    nullable: true
-                bio:
-                    type: string
-                    format: text
-                    nullable: true
-                birthDate:
-                    type: string
-                    format: date
-                    nullable: true
-                phone:
-                    type: string
-                    maxLength: 20
-                    nullable: true
-                studentId:
-                    type: string
-                    maxLength: 50
-                    nullable: true
-                graduationYear:
-                    type: integer
-                    nullable: true
-                department:
-                    type: string
-                    maxLength: 100
-                    nullable: true
-                interests:
-                    type: array
-                    items:
-                        type: string
-                    nullable: true
-                address:
-                    type: string
-                    maxLength: 255
-                    nullable: true
-                profileVisibilityPublic:
-                    type: boolean
-                connectionVisibilityPublic:
-                    type: boolean
-                bloodGroup:
-                    type: string
-                    maxLength: 5
-                    nullable: true
+            $ref: "./schemas/requests/UserProfileUpdateRequest.yaml"
 
         EducationRequest:
-            type: object
-            properties:
-                level:
-                    $ref: "#/components/schemas/EduLevelEnum"
-                institution:
-                    type: string
-                    maxLength: 255
-                degree:
-                    type: string
-                    maxLength: 100
-                    nullable: true
-                fieldOfStudy:
-                    type: string
-                    maxLength: 100
-                    nullable: true
-                startDate:
-                    type: string
-                    format: date
-                    nullable: true
-                endDate:
-                    type: string
-                    format: date
-                    nullable: true
-            required:
-                - level
-                - institution
+            $ref: "./schemas/requests/EducationRequest.yaml"
 
         AchievementRequest:
-            type: object
-            properties:
-                title:
-                    type: string
-                    maxLength: 255
-                issuedBy:
-                    type: string
-                    maxLength: 255
-                    nullable: true
-                description:
-                    type: string
-                    format: text
-                    nullable: true
-                achievedAt:
-                    type: string
-                    format: date
-                    nullable: true
-            required:
-                - title
+            $ref: "./schemas/requests/AchievementRequest.yaml"
 
         UniversityRequest:
             type: object
@@ -2123,7 +579,7 @@ components:
             properties:
                 status:
                     type: string
-                    enum: [interested, attending]
+                    enum: [ interested, attending ]
             required:
                 - status
 
@@ -2285,128 +741,85 @@ components:
                 limit:
                     type: integer
 
+
+        ########################
+        # Responses schemas
+        ########################
+        LoginSuccessResponse:
+            $ref: "./schemas/AuthResponses/LoginSuccessResponse.yaml"
+
+        RefreshTokenResponse:
+            $ref: "./schemas/AuthResponses/RefreshTokenResponse.yaml"
+
+        AuthenticatedUserDetailsResponse:
+            $ref: "./schemas/AuthResponses/AuthenticatedUserDetailsResponse.yaml"
+        
+        AllUsersResponse:
+            $ref: "./schemas/AuthResponses/AllUsersResponse.yaml"
+
+        CurrentUserProfileResponse:
+            $ref: "./schemas/UserProfileResponse/CurrentProfileRespone.yaml"
+
+        AllEducationResponse:
+           $ref: "./schemas/UserProfileResponse/AllEducationResponse.yaml"
+
+        SingleEducationResponse:
+            $ref: "./schemas/UserProfileResponse/SingleEducationResponse.yaml"
+
+        AllAchievementResponse:
+            $ref: "./schemas/UserProfileResponse/AllAchievementResponse.yaml"
+
+        SingleAchievementResponse:
+            $ref: "./schemas/UserProfileResponse/SingleAchievementResponse.yaml"
+
+        AllUniversityResponse:
+            $ref: "./schemas/UniversityResponses/AllUniversities.yaml"
+
+        SingleUniversityResponse:
+            $ref: "./schemas/UniversityResponses/SingleUniversityResponse.yaml"
+
     #=====================================================
     # Common Response Definitions
     #=====================================================
     responses:
         UnauthorizedError: # 401
-            description: Authentication is required and has failed or has not yet been provided.
-            content:
-                application/json:
-                    schema:
-                        $ref: "#/components/schemas/ErrorResponse"
-                    example:
-                        error: "unauthorized"
-                        code: 401
-                        message: "Valid authentication credentials were not provided."
-                        timestamp: "2024-05-30T15:00:00Z"
+            $ref: "./schemas/errors/Unauthorized.yaml"
 
         ForbiddenError: # 403
-            description: The authenticated user does not have permission to perform the requested action on the resource.
-            content:
-                application/json:
-                    schema:
-                        $ref: "#/components/schemas/ErrorResponse"
-                    example:
-                        error: "forbidden_access"
-                        code: 403
-                        message: "You do not have the necessary permissions to access or modify this resource."
-                        timestamp: "2024-05-30T15:01:00Z"
+            $ref: "./schemas/errors/Forbidden.yaml"
+
         NotFoundError: # 404
-            description: The requested resource could not be found on the server.
-            content:
-                application/json:
-                    schema:
-                        $ref: "#/components/schemas/ErrorResponse"
-                    example:
-                        error: "resource_not_found"
-                        code: 404
-                        message: "The specified `item` with 'identifier' 'xyz' does not exist."
-                        timestamp: "2024-05-30T15:02:00Z"
+            $ref: "./schemas/errors/NotFound.yaml"
+
         BadRequestError: # 400
-            description: "The server cannot or will not process the request due to something perceived to be a client error (e.g., malformed request syntax, invalid request message framing, or deceptive request routing). Check the `details` array for specific field errors."
-            content:
-                application/json:
-                    schema:
-                        $ref: "#/components/schemas/ErrorResponse"
-                    example:
-                        error: "validation_error"
-                        code: 400
-                        message: "Request validation failed for 1 field(s)."
-                        details:
-                            - field: "startDate"
-                              message: "Start date must be in the future."
-                        timestamp: "2024-05-30T15:03:00Z"
+            $ref: "./schemas/errors/BadRequest.yaml"
+
         ConflictError: # For 409
-            description:
-                The request could not be completed due to a conflict with the current state of the target resource.
-                This code is used in situations where the user might be able to resolve the conflict and resubmit the request.
-            content:
-                application/json:
-                    schema:
-                        $ref: "#/components/schemas/ErrorResponse"
-                    example:
-                        error: "resource_conflict"
-                        code: 409
-                        message: "A user with the provided email address already exists."
-                        timestamp: "2024-05-30T15:04:00Z"
+            $ref: "./schemas/errors/Conflict.yaml"
+
         TooManyRequestsError: # For 429
-            description: |
-                The user has sent too many requests in a given amount of time ("rate limiting").
-                The `Retry-After` header might be included to indicate how long to wait before making a new request.
-            headers:
-                Retry-After:
-                    description: The number of seconds to wait before making a new request.
-                    schema:
-                        type: integer
-                    example: 60 # 60 seconds
-                X-RateLimit-Limit:
-                    $ref: "#/components/headers/X-RateLimit-Limit"
-                X-RateLimit-Remaining:
-                    $ref: "#/components/headers/X-RateLimit-Remaining"
-                X-RateLimit-Reset:
-                    $ref: "#/components/headers/X-RateLimit-Reset"
-            content:
-                application/json:
-                    schema:
-                        $ref: "#/components/schemas/ErrorResponse"
-                    example:
-                        error: "rate_limit_exceeded"
-                        code: 429
-                        message: "You have exceeded the allowed number of requests. Please try again later."
-                        timestamp: "2024-05-30T15:05:00Z"
+            $ref: "./schemas/errors/TooManyRequest.yaml"
+
         InternalServerError: # 500
-            description: |
-                An unexpected condition was encountered on the server that prevented it from fulfilling the request.
-                This error is generally not the client's fault.
-            content:
-                application/json:
-                    schema:
-                        $ref: "#/components/schemas/ErrorResponse"
-                    example:
-                        error: "internal_server_error"
-                        code: 500
-                        message: "An unexpected error occurred. Please try again later. If the problem persists, contact support."
-                        timestamp: "2024-05-30T15:06:00Z"
+            $ref: "./schemas/errors/InternalServerError.yaml"
 
         SuccessMessageResponse:
             description: Generic success response with a message.
             content:
                 application/json:
                     schema:
-                        $ref: "#/components/schemas/SuccessMessageResponse"
+                        $ref: "#/components/schemas/SuccessMessage"
                     example:
-                        message: "Logged in successfully"
-                        data: [
-                            {
-                                "accessToken" : "token"
-                            }
-                        ]
+                        message:
+                            type: string
 
 
 
 # Paths will be extensive. Starting with Authentication.
 paths:
+    # --------------------------------------
+    # Authentication Endpoints
+    # --------------------------------------
     /auth/register:
         post:
             tags:
@@ -2424,15 +837,23 @@ paths:
                     content:
                         application/json:
                             schema:
-                                type: object
-                                properties:
-                                    userId:
-                                        type: string
-                                        format: uuid
-                                    message:
-                                        type: string
+                                $ref: "#/components/schemas/SuccessMessage"
+                            example:
+                                message: "Registration successful. Please check your email for verification."
+                                data:
+                                    userId: "abc-abc-abc-abc-abc"
+
                 "400":
-                    $ref: "#/components/responses/BadRequestError" # e.g., email already exists
+                    $ref: "#/components/responses/BadRequestError" # Missing fields, password mismatch, etc.
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/responses/NotFoundError"
+                            example:
+                                message: "University not found"
+                "409":
+                    $ref: "#/components/responses/ConflictError" # Email already exists
                 "500":
                     $ref: "#/components/responses/InternalServerError"
 
@@ -2453,28 +874,50 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/AuthTokenResponse"
+                                $ref: "#/components/schemas/LoginSuccessResponse"
+
                 "400":
-                    $ref: "#/components/responses/BadRequestError" # Invalid credentials
+                    $ref: "#/components/responses/BadRequestError" # Missing fields
                 "401":
-                    $ref: "#/components/responses/UnauthorizedError" # User not verified
+                    $ref: "#/components/responses/UnauthorizedError" # Invalid credentials
+                "403":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/responses/ForbiddenError"
+                            example:
+                                message: "Please verify your email before logging in."
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/responses/NotFoundError"
+                            example:
+                                message: "User not found"
                 "500":
                     $ref: "#/components/responses/InternalServerError"
 
     /auth/verify-email:
-        post:
+        get:
             tags:
                 - Authentication
             summary: Verify user's email using a token
-            requestBody:
-                required: true
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/VerifyEmailRequest"
+            parameters:
+                - name: token
+                  in: query
+                  required: true
+                  description: Email verification token
+                  schema:
+                      type: string
             responses:
-                "200":
-                    $ref: "#/components/responses/SuccessMessageResponse"
+                "201":
+                    description: Email verified successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SuccessMessage"
+                            example:
+                                message: "Email verified successfully"
                 "400":
                     $ref: "#/components/responses/BadRequestError" # Invalid or expired token
                 "500":
@@ -2490,12 +933,18 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/ResendVerificationEmailRequest"
+                            $ref: "#/components/schemas/EmailOnlyRequest"
             responses:
                 "200":
-                    $ref: "#/components/responses/SuccessMessageResponse"
+                    description: Verification email sent
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SuccessMessage"
+                            example:
+                                message: "Verification email sent!"
                 "400":
-                    $ref: "#/components/responses/BadRequestError" # User not found or already verified
+                    $ref: "#/components/responses/BadRequestError" # Email already verified
                 "500":
                     $ref: "#/components/responses/InternalServerError"
 
@@ -2509,12 +958,18 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/ForgotPasswordRequest"
+                            $ref: "#/components/schemas/EmailOnlyRequest"
             responses:
                 "200":
-                    $ref: "#/components/responses/SuccessMessageResponse"
+                    description: Password reset instructions sent
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SuccessMessage"
+                            example:
+                                message: "Password reset instructions sent to your email."
                 "400":
-                    $ref: "#/components/responses/BadRequestError" # User not found
+                    $ref: "#/components/responses/BadRequestError" # Missing email
                 "500":
                     $ref: "#/components/responses/InternalServerError"
 
@@ -2531,9 +986,15 @@ paths:
                             $ref: "#/components/schemas/ResetPasswordRequest"
             responses:
                 "200":
-                    $ref: "#/components/responses/SuccessMessageResponse"
+                    description: Password reset successful
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SuccessMessage"
+                            example:
+                                message: "Password reset successful"
                 "400":
-                    $ref: "#/components/responses/BadRequestError" # Invalid token or password policy
+                    $ref: "#/components/responses/BadRequestError" # Invalid token, password policy, etc.
                 "500":
                     $ref: "#/components/responses/InternalServerError"
 
@@ -2541,25 +1002,20 @@ paths:
         post:
             tags:
                 - Authentication
-            summary: Obtain a new access token using a refresh token
-            requestBody:
-                required: true
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/RefreshTokenRequest"
+            summary: Obtain a new access token using refresh token from cookies
+            security:
+                - bearerAuth: []
             responses:
                 "200":
-                    description: New access token generated.
+                    description: Token refreshed successfully
                     content:
                         application/json:
                             schema:
-                                type: object
-                                properties:
-                                    accessToken:
-                                        type: string
+                                $ref: "#/components/schemas/RefreshTokenResponse"
                 "401":
-                    $ref: "#/components/responses/UnauthorizedError" # Invalid refresh token
+                    $ref: "#/components/responses/UnauthorizedError" # Invalid or missing refresh token
+                "404":
+                    $ref: "#/components/responses/NotFoundError" # User not found
                 "500":
                     $ref: "#/components/responses/InternalServerError"
 
@@ -2567,133 +1023,183 @@ paths:
         post:
             tags:
                 - Authentication
-            summary: Log out a user
+            summary: Log out a user by invalidating refresh token
             security:
                 - bearerAuth: []
             responses:
                 "200":
-                    $ref: "#/components/responses/SuccessMessageResponse"
+                    description: Logout successful
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SuccessMessage"
+                            example:
+                                message: "Logout successful"
                 "401":
-                    $ref: "#/components/responses/UnauthorizedError"
+                    $ref: "#/components/responses/UnauthorizedError" # Missing refresh token
                 "500":
                     $ref: "#/components/responses/InternalServerError"
 
-    # --- Users ---
+    # --------------------------------------
+    # User Endpoints
+    # --------------------------------------
     /users/me:
         get:
             tags:
                 - Users
+                - User Profiles
             summary: Get current authenticated user's details
+            description: |
+                Retrieves the complete profile information for the currently authenticated user.
+                This includes core user data (`User` schema) and extended profile details (`UserProfile` schema).
+            operationId: getCurrentUser
             security:
                 - bearerAuth: []
             responses:
                 "200":
-                    description: Current user details.
+                    description: Successfully retrieved current user's information.
+                    headers:
+                        X-RateLimit-Limit:
+                            $ref: "#/components/headers/X-RateLimit-Limit"
+                        X-RateLimit-Remaining:
+                            $ref: "#/components/headers/X-RateLimit-Remaining"
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/UserWithProfile"
+                                $ref: "#/components/schemas/AuthenticatedUserDetailsResponse"
+
+
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
-        put:
-            tags:
-                - Users
-            summary: Update current authenticated user's core details
-            security:
-                - bearerAuth: []
-            requestBody:
-                required: true
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/UserUpdateRequest"
-            responses:
-                "200":
-                    description: User updated successfully.
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/User"
-                "400":
-                    $ref: "#/components/responses/BadRequestError"
-                "401":
-                    $ref: "#/components/responses/UnauthorizedError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /users/me/password:
         patch:
             tags:
                 - Users
             summary: Change current authenticated user's password
+            description: |
+                Allows the currently authenticated user to change their password.
+                Requires the current password for verification before setting the new password.
+            operationId: changeCurrentUserPassword
             security:
                 - bearerAuth: []
             requestBody:
+                description: Current and new password details.
                 required: true
                 content:
                     application/json:
                         schema:
                             $ref: "#/components/schemas/ChangePasswordRequest"
+
             responses:
                 "200":
-                    $ref: "#/components/responses/SuccessMessageResponse"
-                "400":
+                    description: Password updated successfully.
+                    headers:
+                        X-RateLimit-Limit:
+                            $ref: "#/components/headers/X-RateLimit-Limit"
+                        X-RateLimit-Remaining:
+                            $ref: "#/components/headers/X-RateLimit-Remaining"
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/responses/SuccessMessageResponse"
+                            example:
+                                message: "Password updated successfully."
+                "400": # For validation errors like weak new password or current password mismatch
                     $ref: "#/components/responses/BadRequestError"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /users/{userId}:
         get:
             tags:
                 - Users
+                - User Profiles
             summary: Get a specific user's public profile
+            description: |
+                Retrieves the public profile information for a specific user identified by their ID.
+                The level of detail returned depends on the target user's profile visibility settings and the relationship between the authenticated user and the target user (e.g., if they are connected).
+            operationId: getUserProfileById
             parameters:
                 - $ref: "#/components/parameters/userIdParam"
             security:
-                - bearerAuth: [] # Optional, for enhanced info if connected
+                - bearerAuth: [] # Optional: Authenticated users might see more details based on privacy settings
             responses:
                 "200":
-                    description: User profile details.
+                    description: Successfully retrieved user profile information.
+                    headers:
+                        X-RateLimit-Limit:
+                            $ref: "#/components/headers/X-RateLimit-Limit"
+                        X-RateLimit-Remaining:
+                            $ref: "#/components/headers/X-RateLimit-Remaining"
                     content:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/UserWithProfile" # Or a more restricted public profile schema
+
+                "401": # If authentication is required for certain visibility levels and not provided
+                    $ref: "#/components/responses/UnauthorizedError"
+                "403": # If the authenticated user is not allowed to view this profile due to privacy settings
+                    $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /users:
         get:
             tags:
                 - Users
-            summary: Get a list of users (admin or with search/filtering)
-            security:
-                - bearerAuth: [] # Admin role might be required for full list
+            summary: List and search users
+            description: |
+                Retrieves a paginated list of users.
+                This endpoint is typically restricted to administrators or supports searching for public profiles.
+                Supports filtering by university, role, and a general search query.
+            operationId: listUsers
             parameters:
                 - $ref: "#/components/parameters/pageParam"
                 - $ref: "#/components/parameters/limitParam"
-                - $ref: "#/components/parameters/searchQueryParam"
+                - $ref: "#/components/parameters/searchQueryParam" # For searching by name/username
                 - name: universityId
                   in: query
+                  description: Filter users by their associated university ID.
+                  required: false
                   schema:
                       type: string
                       format: uuid
-                - name: role
-                  in: query
-                  schema:
-                      $ref: "#/components/schemas/UserRoleEnum"
+                  example: "223e4567-e89b-12d3-a456-426614174000"
+            security:
+                - bearerAuth: [] # Admin role might be required for full unfiltered list
             responses:
                 "200":
-                    description: A list of users.
+                    description: A paginated list of users successfully retrieved.
+                    headers:
+                        X-RateLimit-Limit:
+                            $ref: "#/components/headers/X-RateLimit-Limit"
+                        X-RateLimit-Remaining:
+                            $ref: "#/components/headers/X-RateLimit-Remaining"
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/PaginatedUsersResponse"
+                                $ref: "#/components/schemas/AllUsersResponse"
+
+
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
-                "403":
+                "403": # If non-admin tries to access without sufficient search params for public profiles
                     $ref: "#/components/responses/ForbiddenError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
-    # --- User Profiles ---
+    # --------------------------------------
+    # User Profiles
+    # --------------------------------------
     /users/me/profile:
         get:
             tags:
@@ -2707,11 +1213,13 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/UserProfile"
+                                $ref: "#/components/schemas/CurrentUserProfileResponse"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         put:
             tags:
                 - User Profile Sections
@@ -2730,11 +1238,13 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/UserProfile"
+                                $ref: "#/components/schemas/CurrentUserProfileResponse"
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /users/me/profile/education:
         get:
@@ -2751,9 +1261,11 @@ paths:
                             schema:
                                 type: array
                                 items:
-                                    $ref: "#/components/schemas/Education"
+                                    $ref: "#/components/schemas/AllEducationResponse"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         post:
             tags:
                 - User Profile Sections
@@ -2772,11 +1284,13 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Education"
+                                $ref: "#/components/schemas/SingleEducationResponse"
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /users/me/profile/education/{educationId}:
         parameters:
@@ -2799,13 +1313,15 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Education"
+                                $ref: "#/components/schemas/SingleEducationResponse"
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         delete:
             tags:
                 - User Profile Sections
@@ -2815,10 +1331,16 @@ paths:
             responses:
                 "204":
                     description: Education entry deleted.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SingleEducationResponse"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /users/me/profile/achievements:
         get:
@@ -2833,11 +1355,11 @@ paths:
                     content:
                         application/json:
                             schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/Achievement"
+                                $ref: "#/components/schemas/AllAchievementResponse"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         post:
             tags:
                 - User Profile Sections
@@ -2856,11 +1378,13 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Achievement"
+                                $ref: "#/components/schemas/SingleAchievementResponse"
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /users/me/profile/achievements/{achievementId}:
         parameters:
@@ -2883,13 +1407,15 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Achievement"
+                                $ref: "#/components/schemas/SingleAchievementResponse"
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         delete:
             tags:
                 - User Profile Sections
@@ -2899,19 +1425,27 @@ paths:
             responses:
                 "204":
                     description: Achievement entry deleted.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SingleAchievementResponse"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
-    # --- Universities ---
+    # --------------------------------------
+    # Universities
+    # --------------------------------------
     /universities:
         get:
             tags:
                 - Universities
             summary: Get a list of all universities
             parameters:
-                - $ref: "#/components/parameters/pageParem"
+                - $ref: "#/components/parameters/pageParam"
                 - $ref: "#/components/parameters/limitParam"
                 - $ref: "#/components/parameters/searchQueryParam"
             responses:
@@ -2920,9 +1454,14 @@ paths:
                     content:
                         application/json:
                             schema:
-                                type: array # Add PaginatedUniversitiesResponse if needed
-                                items:
-                                    $ref: "#/components/schemas/University"
+                                $ref: "#/components/schemas/AllUniversityResponse"
+
+
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         post:
             tags:
                 - Universities
@@ -2941,13 +1480,15 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/University"
+                                $ref: "#/components/schemas/SingleUniversityResponse"
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "403":
                     $ref: "#/components/responses/ForbiddenError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /universities/{universityId}:
         parameters:
@@ -2962,9 +1503,11 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/University"
+                                $ref: "#/components/schemas/SingleUniversityResponse"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         put:
             tags:
                 - Universities
@@ -2983,7 +1526,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/University"
+                                $ref: "#/components/schemas/SingleUniversityResponse"
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
@@ -2992,6 +1535,8 @@ paths:
                     $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         delete:
             tags:
                 - Universities
@@ -3001,12 +1546,17 @@ paths:
             responses:
                 "204":
                     description: University deleted.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SingleUniversityResponse"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "403":
                     $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+
 
     # --- Communities ---
     # Note: Community creation might be tied to university creation or an admin action.
@@ -3145,15 +1695,15 @@ paths:
 
     /communities/{communityId}/members:
         parameters:
-            - $ref: "#/components/parameters/CommunityIdParam"
+            - $ref: "#/components/parameters/communityIdParam"
         get:
             tags:
                 - Communities
             summary: Get a list of members in a community
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
-                - $ref: "#/components/parameters/SearchQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+                - $ref: "#/components/parameters/searchQueryParam"
                 - name: role
                   in: query
                   schema:
@@ -3192,8 +1742,8 @@ paths:
 
     /communities/{communityId}/members/{userId}:
         parameters:
-            - $ref: "#/components/parameters/CommunityIdParam"
-            - $ref: "#/components/parameters/UserIdParam"
+            - $ref: "#/components/parameters/communityIdParam"
+            - $ref: "#/components/parameters/userIdParam"
         put:
             tags:
                 - Communities
@@ -3240,15 +1790,15 @@ paths:
     # --- Groups ---
     /communities/{communityId}/groups:
         parameters:
-            - $ref: "#/components/parameters/CommunityIdParam"
+            - $ref: "#/components/parameters/communityIdParam"
         get:
             tags:
                 - Groups
             summary: Get all groups within a specific community
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
-                - $ref: "#/components/parameters/SearchQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+                - $ref: "#/components/parameters/searchQueryParam"
                 - name: isPublic
                   in: query
                   schema:
@@ -3294,7 +1844,7 @@ paths:
 
     /groups/{groupId}:
         parameters:
-            - $ref: "#/components/parameters/GroupIdParam"
+            - $ref: "#/components/parameters/groupIdParam"
         get:
             tags:
                 - Groups
@@ -3357,10 +1907,10 @@ paths:
                 - Groups
             summary: Get all public groups across all communities
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
-                - $ref: "#/components/parameters/SearchQueryParam"
-                - $ref: "#/components/parameters/TagQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+                - $ref: "#/components/parameters/searchQueryParam"
+                - $ref: "#/components/parameters/tagQueryParam"
             responses:
                 "200":
                     description: A list of public groups.
@@ -3373,15 +1923,15 @@ paths:
 
     /groups/{groupId}/members:
         parameters:
-            - $ref: "#/components/parameters/GroupIdParam"
+            - $ref: "#/components/parameters/groupIdParam"
         get:
             tags:
                 - Groups
             summary: Get a list of members in a group
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
-                - $ref: "#/components/parameters/SearchQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+                - $ref: "#/components/parameters/searchQueryParam"
                 - name: role
                   in: query
                   schema:
@@ -3427,8 +1977,8 @@ paths:
 
     /groups/{groupId}/members/{userId}:
         parameters:
-            - $ref: "#/components/parameters/GroupIdParam"
-            - $ref: "#/components/parameters/UserIdParam"
+            - $ref: "#/components/parameters/groupIdParam"
+            - $ref: "#/components/parameters/userIdParam"
         put:
             tags:
                 - Groups
@@ -3474,7 +2024,7 @@ paths:
 
     /groups/{groupId}/member-requests:
         parameters:
-            - $ref: "#/components/parameters/GroupIdParam"
+            - $ref: "#/components/parameters/groupIdParam"
         get:
             tags:
                 - Groups
@@ -3499,8 +2049,8 @@ paths:
 
     /groups/{groupId}/member-requests/{userId}/approve:
         parameters:
-            - $ref: "#/components/parameters/GroupIdParam"
-            - $ref: "#/components/parameters/UserIdParam"
+            - $ref: "#/components/parameters/groupIdParam"
+            - $ref: "#/components/parameters/userIdParam"
         post:
             tags:
                 - Groups
@@ -3523,8 +2073,8 @@ paths:
 
     /groups/{groupId}/member-requests/{userId}/reject:
         parameters:
-            - $ref: "#/components/parameters/GroupIdParam"
-            - $ref: "#/components/parameters/UserIdParam"
+            - $ref: "#/components/parameters/groupIdParam"
+            - $ref: "#/components/parameters/userIdParam"
         post:
             tags:
                 - Groups
@@ -3552,8 +2102,8 @@ paths:
                 - Posts
             summary: Get a feed of posts
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
                 - name: communityId
                   in: query
                   schema:
@@ -3573,7 +2123,7 @@ paths:
                   in: query
                   schema:
                       type: boolean
-                - $ref: "#/components/parameters/TagQueryParam"
+                - $ref: "#/components/parameters/tagQueryParam"
                 - name: status
                   in: query
                   schema:
@@ -3618,7 +2168,7 @@ paths:
 
     /posts/{postId}:
         parameters:
-            - $ref: "#/components/parameters/PostIdParam"
+            - $ref: "#/components/parameters/postIdParam"
         get:
             tags:
                 - Posts
@@ -3677,7 +2227,7 @@ paths:
 
     /posts/{postId}/approve:
         parameters:
-            - $ref: "#/components/parameters/PostIdParam"
+            - $ref: "#/components/parameters/postIdParam"
         post:
             tags:
                 - Posts
@@ -3720,7 +2270,7 @@ paths:
 
     /users/me/posts/{postId}/save:
         parameters:
-            - $ref: "#/components/parameters/PostIdParam"
+            - $ref: "#/components/parameters/postIdParam"
         post:
             tags:
                 - Posts
@@ -3765,14 +2315,14 @@ paths:
     # --- Comments ---
     /posts/{postId}/comments:
         parameters:
-            - $ref: "#/components/parameters/PostIdParam"
+            - $ref: "#/components/parameters/postIdParam"
         get:
             tags:
                 - Comments
             summary: Get comments for a post
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
                 - name: sortBy
                   in: query
                   schema:
@@ -3819,7 +2369,7 @@ paths:
 
     /comments/{commentId}:
         parameters:
-            - $ref: "#/components/parameters/CommentIdParam"
+            - $ref: "#/components/parameters/commentIdParam"
         put:
             tags:
                 - Comments
@@ -3872,7 +2422,7 @@ paths:
     # --- Reactions ---
     /posts/{postId}/reactions:
         parameters:
-            - $ref: "#/components/parameters/PostIdParam"
+            - $ref: "#/components/parameters/postIdParam"
         post:
             tags:
                 - Reactions
@@ -3989,7 +2539,7 @@ paths:
 
     /connections/requests/{requestId}/accept:
         parameters:
-            - $ref: "#/components/parameters/ConnectionRequestIdParam"
+            - $ref: "#/components/parameters/connectionRequestIdParam"
         post:
             tags:
                 - Connections
@@ -4012,7 +2562,7 @@ paths:
 
     /connections/requests/{requestId}/reject:
         parameters:
-            - $ref: "#/components/parameters/ConnectionRequestIdParam"
+            - $ref: "#/components/parameters/connectionRequestIdParam"
         post:
             tags:
                 - Connections
@@ -4041,9 +2591,9 @@ paths:
             security:
                 - bearerAuth: []
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
-                - $ref: "#/components/parameters/SearchQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+                - $ref: "#/components/parameters/searchQueryParam"
             responses:
                 "200":
                     description: List of connected users.
@@ -4058,7 +2608,7 @@ paths:
 
     /connections/{userId}: # To remove a connection
         parameters:
-            - $ref: "#/components/parameters/UserIdParam"
+            - $ref: "#/components/parameters/userIdParam"
         delete:
             tags:
                 - Connections
@@ -4103,7 +2653,7 @@ paths:
 
     /messages/chat/{userId}:
         parameters:
-            - $ref: "#/components/parameters/UserIdParam"
+            - $ref: "#/components/parameters/userIdParam"
         get:
             tags:
                 - Messages
@@ -4115,7 +2665,7 @@ paths:
                   in: query
                   schema:
                       type: string
-                - $ref: "#/components/parameters/LimitParam"
+                - $ref: "#/components/parameters/limitParam"
             responses:
                 "200":
                     description: Chat history.
@@ -4138,8 +2688,8 @@ paths:
             security:
                 - bearerAuth: []
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
             responses:
                 "200":
                     description: List of conversations.
@@ -4161,8 +2711,8 @@ paths:
             security:
                 - bearerAuth: []
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
                 - name: isRead
                   in: query
                   schema:
@@ -4181,7 +2731,7 @@ paths:
 
     /notifications/{notificationId}/read:
         parameters:
-            - $ref: "#/components/parameters/NotificationIdParam"
+            - $ref: "#/components/parameters/notificationIdParam"
         post:
             tags:
                 - Notifications
@@ -4209,7 +2759,7 @@ paths:
                 - bearerAuth: []
             responses:
                 "200":
-                    $ref: "#/components/responses/SuccessMessage"
+                    $ref: "#/components/responses/SuccessMessageResponse"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
 
@@ -4220,9 +2770,9 @@ paths:
                 - Tags
             summary: Get a list of all tags
             parameters:
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
-                - $ref: "#/components/parameters/SearchQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+                - $ref: "#/components/parameters/searchQueryParam"
             responses:
                 "200":
                     description: A list of tags.
@@ -4282,9 +2832,9 @@ paths:
                   schema:
                       type: string
                       format: uuid
-                - $ref: "#/components/parameters/TagsQueryParam"
-                - $ref: "#/components/parameters/PageParam"
-                - $ref: "#/components/parameters/LimitParam"
+                - $ref: "#/components/parameters/tagsQueryParam"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
             responses:
                 "200":
                     description: Search results.

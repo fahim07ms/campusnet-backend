@@ -1,0 +1,32 @@
+type: object
+description: Request body when updating user profile
+profile:
+  profilePicture:
+    type: string
+    format: uri
+  coverPhoto:
+    type: string
+    format: uri
+  bio:
+    type: string
+  birthDate:
+    type: string
+    format: date
+  phone:
+    type: string
+  studentId:
+    type: string
+  graduationYear:
+    type: integer
+  department:
+    type: string
+  interests:
+    type: array
+    items:
+      type: string
+  address:
+    type: string
+  profileVisibilityPublic:
+    type: boolean
+  connectionVisibilityPublic:
+    type: boolean
