@@ -9,15 +9,25 @@ dotenv.config();
 
 // Swagger Documentation UI Setup
 const swaggerUi = require("swagger-ui-express");
-const fs = require("fs");
-const YAML = require("yaml");
+const SwaggerParser = require("@apidevtools/swagger-parser");
+// const fs = require("fs");
+// const YAML = require("yaml");
 const path = require("path");
 
-const file = fs.readFileSync(
-    path.join(__dirname, "docs", "openapi.yaml"),
-    "utf8",
-);
-const openapiDocumentation = YAML.parse(file);
+SwaggerParser
+    .bundle(path.join(__dirname, "docs", "openapi.yaml"))
+    .then((api) => {
+        app.use("/api/v1/docs", swaggerUi.serve, swaggerUi.setup(api));
+    })
+    .catch((err) => {
+        console.error("❌ Failed to load OpenAPI docs:", err);
+    });
+
+// const file = fs.readFileSync(
+//     path.join(__dirname, "docs", "openapi.yaml"),
+//     "utf8",
+// );
+// const openapiDocumentation = YAML.parse(file);
 
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -67,7 +77,7 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth", authLimiter, authRoutes);
 
 // Swagger API docs route
-app.use("/api/v1/docs", swaggerUi.serve, swaggerUi.setup(openapiDocumentation));
+// app.use("/api/v1/docs", swaggerUi.serve, swaggerUi.setup(openapiDocumentation));
 
 
 module.exports = app;
