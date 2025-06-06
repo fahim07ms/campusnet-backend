@@ -7,4 +7,4 @@ properties:
     type: object
     properties:
       accessToken:
-        $ref: "../AuthToken"
+        $ref: "../AuthToken.yaml"
