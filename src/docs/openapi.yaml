@@ -404,32 +404,7 @@ components:
                 - domain
 
         CommunityRequest:
-            type: object
-            properties:
-                name:
-                    type: string
-                    maxLength: 255
-                description:
-                    type: string
-                    format: text
-                    nullable: true
-                universityId: # Required if creating a new community directly
-                    type: string
-                    format: uuid
-                coverImage:
-                    type: string
-                    format: url
-                    nullable: true
-                logo:
-                    type: string
-                    format: url
-                    nullable: true
-                isPublic:
-                    type: boolean
-                    default: true
-            required:
-                - name
-                # universityId might be implicit if tied to university creation
+            $ref: "./schemas/requests/CommunityRequest.yaml"
 
         CommunityMemberRoleRequest:
             type: object
@@ -777,6 +752,30 @@ components:
 
         SingleUniversityResponse:
             $ref: "./schemas/UniversityResponses/SingleUniversityResponse.yaml"
+
+        AllCommunityResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                data:
+                    type: object
+                    properties:
+                        communities:
+                            type: array
+                            items:
+                                $ref: "#/components/schemas/Community"
+
+        CommunityResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                data:
+                    type: object
+                    properties:
+                        community:
+                            $ref: "#/components/schemas/Community"
 
     #=====================================================
     # Common Response Definitions
@@ -1582,9 +1581,12 @@ paths:
                     content:
                         application/json:
                             schema:
-                                type: array # Add PaginatedCommunitiesResponse if needed
-                                items:
-                                    $ref: "#/components/schemas/Community"
+                                $ref: "#/components/schemas/AllCommunityResponse"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
+
         post:
             tags:
                 - Communities
@@ -1603,13 +1605,15 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Community"
+                                $ref: "#/components/schemas/CommunityResponse"
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "403":
                     $ref: "#/components/responses/ForbiddenError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /communities/{communityId}:
         parameters:
@@ -1624,9 +1628,15 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Community"
-                "404":
-                    $ref: "#/components/responses/NotFoundError"
+                                $ref: "#/components/schemas/CommunityResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequestError"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "403":
+                    $ref: "#/components/responses/ForbiddenError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         put:
             tags:
                 - Communities
@@ -1638,33 +1648,14 @@ paths:
                 content:
                     application/json:
                         schema:
-                            # Partial update for community
-                            type: object
-                            properties:
-                                name:
-                                    type: string
-                                    maxLength: 255
-                                description:
-                                    type: string
-                                    format: text
-                                    nullable: true
-                                coverImage:
-                                    type: string
-                                    format: url
-                                    nullable: true
-                                logo:
-                                    type: string
-                                    format: url
-                                    nullable: true
-                                isPublic:
-                                    type: boolean
+                            $ref: "#/components/schemas/CommentRequest"
             responses:
                 "200":
                     description: Community updated.
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Community"
+                                $ref: "#/components/schemas/CommunityResponse"
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
@@ -1673,6 +1664,8 @@ paths:
                     $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /communities/my:
         get:
@@ -1687,11 +1680,15 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Community"
+                                $ref: "#/components/schemas/CommunityResponse"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
+                "403":
+                    $ref: "#/components/responses/ForbiddenError"
                 "404":
-                    $ref: "#/components/responses/NotFoundError" # If user not associated with a university/community
+                    $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /communities/{communityId}/members:
         parameters:
