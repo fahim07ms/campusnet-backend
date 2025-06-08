@@ -1,0 +1,31 @@
+type: object
+properties:
+  name:
+    type: string
+    maxLength: 255
+  domain:
+    type: array
+    items:
+      type: string
+  location:
+    type: string
+    maxLength: 255
+    nullable: true
+  establishedYear:
+    type: integer
+    nullable: true
+  websites:
+    type: array
+    items:
+      type: string
+  description:
+    type: string
+    format: text
+    nullable: true
+  logoUrl:
+    type: string
+    format: url
+    nullable: true
+required:
+  - name
+  - domain

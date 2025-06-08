@@ -376,32 +376,7 @@ components:
             $ref: "./schemas/requests/AchievementRequest.yaml"
 
         UniversityRequest:
-            type: object
-            properties:
-                name:
-                    type: string
-                    maxLength: 255
-                domain:
-                    type: string
-                    maxLength: 100
-                location:
-                    type: string
-                    maxLength: 255
-                    nullable: true
-                establishedYear:
-                    type: integer
-                    nullable: true
-                description:
-                    type: string
-                    format: text
-                    nullable: true
-                logoUrl:
-                    type: string
-                    format: url
-                    nullable: true
-            required:
-                - name
-                - domain
+            $ref: "./schemas/requests/UniversityRequest.yaml"
 
         CommunityRequest:
             $ref: "./schemas/requests/CommunityRequest.yaml"
@@ -1697,6 +1672,8 @@ paths:
             tags:
                 - Communities
             summary: Get a list of members in a community
+            security:
+                - bearerAuth: [ ]
             parameters:
                 - $ref: "#/components/parameters/pageParam"
                 - $ref: "#/components/parameters/limitParam"
@@ -1711,7 +1688,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                type: array # Add PaginatedCommunityMembersResponse
+                                type: array
                                 items:
                                     $ref: "#/components/schemas/CommunityMember"
                 "404":
