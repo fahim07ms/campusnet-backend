@@ -1,6 +1,5 @@
 const CustomError = require("../utils/errors");
 
-
 const getAllUsers = async (client, { page = 1, limit = 10 }) => {
     const offset = (page - 1) * limit;
 
@@ -8,11 +7,11 @@ const getAllUsers = async (client, { page = 1, limit = 10 }) => {
         text: `
             SELECT
                 u.id,
+                u.email,
                 u.username,
                 u.role,
                 u.is_verified,
                 u.is_active,
-                u.created_at,
                 up.first_name,
                 up.last_name,
                 up.profile_picture,
@@ -21,7 +20,6 @@ const getAllUsers = async (client, { page = 1, limit = 10 }) => {
             FROM users u
             LEFT JOIN user_profiles up ON u.id = up.user_id
             LEFT JOIN universities un ON u.university_id = un.id
-            WHERE u.is_active = true -- Filter for active users only
             ORDER BY u.created_at DESC
             LIMIT $1 OFFSET $2
         `,
@@ -29,7 +27,7 @@ const getAllUsers = async (client, { page = 1, limit = 10 }) => {
     };
 
     const countQuery = {
-        text: "SELECT COUNT(*) FROM users WHERE is_active = true",
+        text: "SELECT COUNT(*) FROM users",
     };
 
     try {
@@ -41,11 +39,12 @@ const getAllUsers = async (client, { page = 1, limit = 10 }) => {
 
         return {
             users: result.rows,
-            pagination: {
+            meta: {
+                totalItems: totalUsers,
+                itemsPerPage: limit,
+                itemCount: result.rows.length,
                 currentPage: page,
                 totalPages: totalPages,
-                totalUsers: totalUsers,
-                limit: limit,
             },
         };
     } catch (err) {
@@ -53,7 +52,6 @@ const getAllUsers = async (client, { page = 1, limit = 10 }) => {
         throw CustomError.internalServerError("Failed to retrieve users");
     }
 };
-
 
 const getUserProfile = async (client, userId) => {
     const query = {
@@ -108,7 +106,9 @@ const getUserProfile = async (client, userId) => {
         if (err.isOperational) {
             throw err;
         }
-        throw CustomError.internalServerError("Failed to retrieve user profile");
+        throw CustomError.internalServerError(
+            "Failed to retrieve user profile",
+        );
     }
 };
 
@@ -116,6 +116,3 @@ module.exports = {
     getAllUsers,
     getUserProfile,
 };
-
-
-
