@@ -21,11 +21,12 @@ const getAllUniversities = async (client, { page = 1, limit = 10 }) => {
 
         return {
             universities: result.rows,
-            pagination: {
+            meta: {
+                totalItems: totalUniversities,
+                itemsPerPage: limit,
+                itemCount: result.rows.length,
                 currentPage: page,
                 totalPages: totalPages,
-                totalUniversities: totalUniversities,
-                limit: limit,
             },
         };
     } catch (err) {

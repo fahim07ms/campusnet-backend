@@ -1,4 +1,4 @@
-const { pool } = require("../config/db.js");
+const pool = require("../config/db.js");
 const UniversityModel = require("../models/universityModel.js");
 const CustomError = require("../utils/errors.js");
 
@@ -22,8 +22,10 @@ const getUniversities = async (req, res, next) => {
 
         res.status(200).json({
             message: "Universities retrieved successfully.",
-            data: result.universities,
-            pagination: result.pagination,
+            data: {
+                universities: result.universities,
+            },
+            meta: result.meta,
         });
     } catch (error) {
         if (error.name && error.code) {
