@@ -1,10 +1,11 @@
 // Find a University by its domain
 export const findUniversityByDomain = async (client, domain) => {
-    const query = 'SELECT * FROM universities WHERE EXISTS (' +
-        'SELECT 1 ' +
-        'FROM unnest(domains) AS domain_suffix ' +
-        'WHERE $1 LIKE \'%\' || domain_suffix' +
-        ');';
+    const query =
+        "SELECT * FROM universities WHERE EXISTS (" +
+        "SELECT 1 " +
+        "FROM unnest(domains) AS domain_suffix " +
+        "WHERE $1 LIKE '%' || domain_suffix" +
+        ");";
     const result = await client.query(query, [domain]);
     return result.rows[0] || null;
 };
@@ -18,7 +19,8 @@ export const findUserByEmail = async (client, email) => {
 
 // Find active user by its id
 export const findActiveUserById = async (client, userId) => {
-    const query = "SELECT * FROM users WHERE id = $1 AND is_active = true";
+    const query = "SELECT * FROM users WHERE id = $1 AND is_active = true;";
+
     const result = await client.query(query, [userId]);
     return result.rows[0] || null;
 };
@@ -63,7 +65,8 @@ export const getUserProfileById = async (client, userId) => {
 
 // Update user's last login
 export const updateLastLogin = async (client, userId) => {
-    const query = "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1";
+    const query =
+        "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1";
     await client.query(query, [userId]);
 };
 
@@ -184,12 +187,17 @@ export const invalidateRefreshToken = async (client, userId) => {
 };
 
 export const invalidateRefreshTokenByTokenHash = async (client, tokenHash) => {
-    const query = "UPDATE refresh_tokens SET is_active = false WHERE token_hash = $1";
+    const query =
+        "UPDATE refresh_tokens SET is_active = false WHERE token_hash = $1";
     await client.query(query, [tokenHash]);
 };
 
 // Find refresh token by its token hash and user id
-export const findRefreshTokenByTokenHash = async (client, tokenHash, userId) => {
+export const findRefreshTokenByTokenHash = async (
+    client,
+    tokenHash,
+    userId,
+) => {
     const query =
         "SELECT * FROM refresh_tokens WHERE token_hash = $1 AND is_active = true AND user_id = $2";
     const result = await client.query(query, [tokenHash, userId]);

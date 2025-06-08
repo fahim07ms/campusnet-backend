@@ -229,7 +229,7 @@ components:
                 items:
                     type: string
                 maxItems: 5
-            example: [ "programming", "contest" ]
+            example: ["programming", "contest"]
 
     schemas:
         # ----------------------
@@ -344,7 +344,7 @@ components:
 
         SuccessMessage:
             $ref: "./schemas/SuccessMessage.yaml"
-            
+
         AuthToken:
             $ref: "./schemas/AuthToken.yaml"
 
@@ -376,32 +376,7 @@ components:
             $ref: "./schemas/requests/AchievementRequest.yaml"
 
         UniversityRequest:
-            type: object
-            properties:
-                name:
-                    type: string
-                    maxLength: 255
-                domain:
-                    type: string
-                    maxLength: 100
-                location:
-                    type: string
-                    maxLength: 255
-                    nullable: true
-                establishedYear:
-                    type: integer
-                    nullable: true
-                description:
-                    type: string
-                    format: text
-                    nullable: true
-                logoUrl:
-                    type: string
-                    format: url
-                    nullable: true
-            required:
-                - name
-                - domain
+            $ref: "./schemas/requests/UniversityRequest.yaml"
 
         CommunityRequest:
             $ref: "./schemas/requests/CommunityRequest.yaml"
@@ -554,7 +529,7 @@ components:
             properties:
                 status:
                     type: string
-                    enum: [ interested, attending ]
+                    enum: [interested, attending]
             required:
                 - status
 
@@ -716,7 +691,6 @@ components:
                 limit:
                     type: integer
 
-
         ########################
         # Responses schemas
         ########################
@@ -728,7 +702,7 @@ components:
 
         AuthenticatedUserDetailsResponse:
             $ref: "./schemas/AuthResponses/AuthenticatedUserDetailsResponse.yaml"
-        
+
         AllUsersResponse:
             $ref: "./schemas/AuthResponses/AllUsersResponse.yaml"
 
@@ -736,7 +710,7 @@ components:
             $ref: "./schemas/UserProfileResponse/CurrentProfileRespone.yaml"
 
         AllEducationResponse:
-           $ref: "./schemas/UserProfileResponse/AllEducationResponse.yaml"
+            $ref: "./schemas/UserProfileResponse/AllEducationResponse.yaml"
 
         SingleEducationResponse:
             $ref: "./schemas/UserProfileResponse/SingleEducationResponse.yaml"
@@ -811,8 +785,6 @@ components:
                     example:
                         message:
                             type: string
-
-
 
 # Paths will be extensive. Starting with Authentication.
 paths:
@@ -1067,7 +1039,6 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/AuthenticatedUserDetailsResponse"
 
-
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "404":
@@ -1187,7 +1158,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/AllUsersResponse"
-
 
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
@@ -1455,7 +1425,6 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/AllUniversityResponse"
 
-
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
 
@@ -1555,7 +1524,6 @@ paths:
                     $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
-
 
     # --- Communities ---
     # Note: Community creation might be tied to university creation or an admin action.
@@ -1697,6 +1665,8 @@ paths:
             tags:
                 - Communities
             summary: Get a list of members in a community
+            security:
+                - bearerAuth: []
             parameters:
                 - $ref: "#/components/parameters/pageParam"
                 - $ref: "#/components/parameters/limitParam"
@@ -1711,7 +1681,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                type: array # Add PaginatedCommunityMembersResponse
+                                type: array
                                 items:
                                     $ref: "#/components/schemas/CommunityMember"
                 "404":

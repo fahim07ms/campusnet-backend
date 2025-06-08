@@ -1,0 +1,30 @@
+type: object
+properties:
+  name:
+    type: string
+    maxLength: 255
+  description:
+    type: string
+    format: text
+    nullable: true
+  universityId:
+    type: string
+    format: uuid
+  coverImage:
+    type: string
+    format: url
+    nullable: true
+  logo:
+    type: string
+    format: url
+    nullable: true
+  isPublic:
+    type: boolean
+    default: true
+  createdBy:
+    type: string
+    format: uuid
+required:
+  - name
+  - universityId
+  - createdBy
