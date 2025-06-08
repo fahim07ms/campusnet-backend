@@ -1,7 +1,10 @@
 type: object
 properties:
-  message:
-    type: string
-    example: "Profile updated successfully"
-  profile:
-    $ref: "../UserProfile.yaml"
+    message:
+        type: string
+        example: "Profile updated successfully"
+    data:
+        type: object
+        properties:
+            profile:
+                $ref: "../UserProfile.yaml"

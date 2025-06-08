@@ -12,7 +12,6 @@ const swaggerUi = require("swagger-ui-express");
 const SwaggerParser = require("@apidevtools/swagger-parser");
 const path = require("path");
 
-
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 1000,
@@ -23,6 +22,8 @@ const globalLimiter = rateLimit({
 
 // Import routes from routes folder
 const { authRoutes } = require("./routes/authRoutes");
+const { userRoutes } = require("./routes/userRoutes");
+const { universityRoutes } = require("./routes/universityRoutes");
 
 // Initialize express
 const app = express();
@@ -52,23 +53,21 @@ const generalLimiter = rateLimit({
     message: { error: "Too many requests, please try again after an hour" },
 });
 
-
-
 // API endpoints will be added here
 app.get("/", (req, res) => {
     return res.status(200).json({ message: "Server is running!" });
 });
 
 app.use("/api/v1/auth", authLimiter, authRoutes);
+app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/universities", universityRoutes);
 
-SwaggerParser
-    .bundle(path.join(__dirname, "docs", "openapi.yaml"))
+SwaggerParser.bundle(path.join(__dirname, "docs", "openapi.yaml"))
     .then((api) => {
         app.use("/api/v1/docs", swaggerUi.serve, swaggerUi.setup(api));
     })
     .catch((err) => {
         console.error("❌ Failed to load OpenAPI docs:", err);
     });
-
 
 module.exports = app;

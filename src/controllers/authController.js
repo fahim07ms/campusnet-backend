@@ -2,7 +2,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
 const dotenv = require("dotenv");
-const rateLimit = require("express-rate-limit");
 
 dotenv.config();
 
@@ -25,7 +24,10 @@ const {
 
 // Error Function Utility
 const customError = require("../utils/errors");
-const {findUserByEmail, findRefreshTokenByTokenHash} = require("../models/authModel");
+const {
+    findUserByEmail,
+    findRefreshTokenByTokenHash,
+} = require("../models/authModel");
 
 /***************************
  * Authentication Controllers
@@ -143,8 +145,8 @@ const register = async (req, res) => {
             customError.internalServerError({
                 message: "Registration failed",
                 details: {
-                    error: error.message
-                }
+                    error: error.message,
+                },
             }),
         );
     } finally {
@@ -265,7 +267,7 @@ const login = async (req, res) => {
                 message: "Login failed",
                 data: {
                     error: error.message,
-                }
+                },
             }),
         );
     } finally {
@@ -317,8 +319,8 @@ const verifyEmail = async (req, res) => {
             customError.internalServerError({
                 message: "Verification failed",
                 details: {
-                    error: error.message
-                }
+                    error: error.message,
+                },
             }),
         );
     } finally {
@@ -352,7 +354,8 @@ const resendVerificationEmail = async (req, res) => {
         // Sending success to prevent email enumeration
         if (!user) {
             return res.status(200).json({
-                message: "If the email exists, verification email has been sent.",
+                message:
+                    "If the email exists, verification email has been sent.",
             });
         }
 
@@ -395,8 +398,8 @@ const resendVerificationEmail = async (req, res) => {
             customError.internalServerError({
                 message: "Failed to resend verification email",
                 details: {
-                    error: error.message
-                }
+                    error: error.message,
+                },
             }),
         );
     } finally {
@@ -466,8 +469,8 @@ const forgotPassword = async (req, res) => {
             customError.internalServerError({
                 message: "Failed to process password reset request",
                 details: {
-                    error: error.message
-                }
+                    error: error.message,
+                },
             }),
         );
     } finally {
@@ -564,8 +567,8 @@ const resetPassword = async (req, res) => {
             customError.internalServerError({
                 message: "Failed to process password reset request",
                 details: {
-                    error: error.message
-                }
+                    error: error.message,
+                },
             }),
         );
     } finally {
@@ -681,7 +684,6 @@ const logout = async (req, res) => {
 
     try {
         const refreshToken = req.cookies.refreshToken;
-        console.log(refreshToken);
 
         if (!refreshToken) {
             return res.status(401).json(
@@ -694,7 +696,10 @@ const logout = async (req, res) => {
         const refreshTokenHash = hashToken(refreshToken);
 
         // Invalidate the refresh tokens
-        await AuthModel.invalidateRefreshTokenByTokenHash(client, refreshTokenHash);
+        await AuthModel.invalidateRefreshTokenByTokenHash(
+            client,
+            refreshTokenHash,
+        );
 
         // Clear refresh token cookie
         res.clearCookie("refreshToken");
@@ -708,8 +713,8 @@ const logout = async (req, res) => {
             customError.internalServerError({
                 message: "Failed to logout",
                 details: {
-                    error: error.message
-                }
+                    error: error.message,
+                },
             }),
         );
     } finally {
