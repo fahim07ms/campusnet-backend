@@ -79,7 +79,8 @@ export const updateUserIsActive = async (client, userId, is_active) => {
 // Get base user data from id
 export const userDataFromId = async (client, userId) => {
     const query =
-        "SELECT u.*, up.*, univ.name, univ.logo_url " +
+        "SELECT u.id as user_id, u.email, u.username, u.role, u.is_active, u.is_verified, u.last_login, u.createdAt, u.updatedAt, univ.name, univ.logo_url " +
+        "up.first_name, up.last_name, up.bio, up.profile_picture, up.cover_photo, up.profile_visibility_public, up.connection_visibility_public, up.interests " +
         "FROM users u LEFT JOIN user_profiles up ON u.id = up.user_id " +
         "LEFT JOIN universities univ ON u.university_id = univ.id " +
         "WHERE u.id = $1";
@@ -96,7 +97,7 @@ export const userDataFromId = async (client, userId) => {
         createAt: data.createAt,
         updatedAt: data.updatedAt,
         university_name: data.university_name,
-        university_logo: data.logo_url,
+        university_logo: data["logo_url"],
         userProfile: {
             first_name: data.first_name,
             last_name: data.last_name,
@@ -203,24 +204,3 @@ export const findRefreshTokenByTokenHash = async (
     const result = await client.query(query, [tokenHash, userId]);
     return result.rows[0] || null;
 };
-
-// const AuthModel = {
-//     findUniversityByDomain,
-//     findUserByEmail,
-//     findActiveUserById,
-//     createUser,
-//     getUserProfileById,
-//     updateLastLogin,
-//     updateUserIsActive,
-//     userDataFromId,
-//     insertRefreshToken,
-//     findUserByVerificationToken,
-//     updateUserVerificationToken,
-//     updatePasswordResetToken,
-//     findUserByValidResetToken,
-//     updatePassword,
-//     invalidateRefreshToken,
-//     findRefreshTokenByTokenHash,
-// };
-//
-// module.exports = AuthModel;

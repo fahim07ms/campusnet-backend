@@ -24,6 +24,7 @@ const globalLimiter = rateLimit({
 const { authRoutes } = require("./routes/authRoutes");
 const { userRoutes } = require("./routes/userRoutes");
 const { universityRoutes } = require("./routes/universityRoutes");
+const { communitiesRoutes } = require("./routes/communitiesRoutes");
 
 // Initialize express
 const app = express();
@@ -61,6 +62,7 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth", authLimiter, authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/universities", universityRoutes);
+app.use("/api/v1/communities", communitiesRoutes);
 
 SwaggerParser.bundle(path.join(__dirname, "docs", "openapi.yaml"))
     .then((api) => {

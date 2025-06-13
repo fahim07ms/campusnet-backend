@@ -210,6 +210,14 @@ components:
                 type: string
                 minLength: 1
             example: "hackathon"
+        sortQueryParam:
+            name: sort
+            in: query
+            description: Sorting term
+            schema:
+                type: string
+                minLength: 1
+            example: "name_asc"
         tagQueryParam:
             name: tag
             in: query
@@ -1526,8 +1534,6 @@ paths:
                     $ref: "#/components/responses/NotFoundError"
 
     # --- Communities ---
-    # Note: Community creation might be tied to university creation or an admin action.
-    # Assuming a general /communities endpoint for listing/admin creation for now.
     /communities:
         get:
             tags:
@@ -1537,6 +1543,7 @@ paths:
                 - $ref: "#/components/parameters/pageParam"
                 - $ref: "#/components/parameters/limitParam"
                 - $ref: "#/components/parameters/searchQueryParam"
+                - $ref: "#/components/parameters/sortQueryParam"
                 - name: universityId
                   in: query
                   description: Filter communities by university ID.
@@ -1601,8 +1608,8 @@ paths:
                     $ref: "#/components/responses/BadRequestError"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
-                "403":
-                    $ref: "#/components/responses/ForbiddenError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
                 "500":
                     $ref: "#/components/responses/InternalServerError"
         put:

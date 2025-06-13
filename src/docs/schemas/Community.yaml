@@ -23,6 +23,12 @@ properties:
     nullable: true
     description: Description of the community and its purpose.
     example: "The central place for all students, faculty, and alumni of Metropolitan University of Technology to connect, share news, and find events."
+  rules:
+    type: string
+    maxLength: 1000
+    nullable: true
+    description: Rules of the community.
+    example: "1. No bad words.\n2. Be humble to all."
   logoUrl:
     type: string
     format: uri

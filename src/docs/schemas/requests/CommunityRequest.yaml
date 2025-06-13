@@ -7,6 +7,10 @@ properties:
     type: string
     format: text
     nullable: true
+  rules:
+    type: string
+    format: text
+    nullable: true
   universityId:
     type: string
     format: uuid
