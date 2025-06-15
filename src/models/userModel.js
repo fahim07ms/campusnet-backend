@@ -109,17 +109,8 @@ const getUserProfile = async (client, userId) => {
         throw CustomError.internalServerError(
             "Failed to retrieve user profile",
         );
-<<<<<<< HEAD
     }
 };
-
-/*
-module.exports = {
-    getAllUsers,
-    getUserProfile,
-};
-*/
-
 
 const getUserById = async (client, userId) => {
     const query = {
@@ -167,9 +158,6 @@ const updateUserPassword = async (client, userId, newPassword) => {
         throw CustomError.internalServerError("Failed to update user password");
     }
 };
-
-
-
 
 const updateUserProfile = async (client, userId, {
     first_name,
@@ -262,7 +250,7 @@ const updateUserProfile = async (client, userId, {
     const query = {
         text: `
             UPDATE user_profiles
-            SET ${fields.join(', ')}, updated_at = NOW()
+            SET ${fields.join(", ")}, updated_at = NOW()
             WHERE user_id = $${paramIndex}
             RETURNING *
         `,
@@ -357,7 +345,7 @@ const updateEducation = async (client, userId, educationId, { university_name, d
     const query = {
         text: `
             UPDATE user_education
-            SET ${fields.join(', ')}, updated_at = NOW()
+            SET ${fields.join(", ")}, updated_at = NOW()
             WHERE id = $${paramIndex++} AND user_id = $${paramIndex}
             RETURNING id, university_name, degree, field_of_study, start_date, end_date, description
         `,
@@ -467,7 +455,7 @@ const updateAchievement = async (client, userId, achievementId, { title, descrip
     const query = {
         text: `
             UPDATE user_achievements
-            SET ${fields.join(', ')}, updated_at = NOW()
+            SET ${fields.join(", ")}, updated_at = NOW()
             WHERE id = $${paramIndex++} AND user_id = $${paramIndex}
             RETURNING id, title, description, date_achieved, issued_by, credential_url
         `,
@@ -519,8 +507,6 @@ const updateUserBloodGroup = async (client, userId, blood_group) => {
     } catch (err) {
         console.error(`Error updating blood group for user ${userId}:`, err);
         throw CustomError.internalServerError("Failed to update blood group");
-=======
->>>>>>> ef4cf56fb25df3f02dc3f715fdea88ac9fdf32fc
     }
 };
 
@@ -540,8 +526,3 @@ module.exports = {
     deleteAchievement,
     updateUserBloodGroup,
 };
-<<<<<<< HEAD
-
-
-=======
->>>>>>> ef4cf56fb25df3f02dc3f715fdea88ac9fdf32fc
