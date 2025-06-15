@@ -109,6 +109,7 @@ const getUserProfile = async (client, userId) => {
         throw CustomError.internalServerError(
             "Failed to retrieve user profile",
         );
+<<<<<<< HEAD
     }
 };
 
@@ -518,6 +519,8 @@ const updateUserBloodGroup = async (client, userId, blood_group) => {
     } catch (err) {
         console.error(`Error updating blood group for user ${userId}:`, err);
         throw CustomError.internalServerError("Failed to update blood group");
+=======
+>>>>>>> ef4cf56fb25df3f02dc3f715fdea88ac9fdf32fc
     }
 };
 
@@ -537,5 +540,8 @@ module.exports = {
     deleteAchievement,
     updateUserBloodGroup,
 };
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> ef4cf56fb25df3f02dc3f715fdea88ac9fdf32fc

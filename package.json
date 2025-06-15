@@ -4,7 +4,7 @@
     "description": "CampusNet Project Backend",
     "main": "src/server.js",
     "scripts": {
-        "dev": "npx nodemon --watch docs --ext yaml,yml,json,js,ts src/server.js",
+        "dev": "npx nodemon --watch src --watch docs --ext js,json,yaml,yml,ts src/server.js",
         "start": "node src/server.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },

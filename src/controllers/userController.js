@@ -83,14 +83,6 @@ const getMyProfile = async (req, res, next) => {
     }
 };
 
-/*
-module.exports = {
-    getUsers,
-    getMyProfile,
-};
-*/
-
-
 const getMe = async (req, res, next) => {
     const userId = req.userId;
 
@@ -240,9 +232,6 @@ const getUserById = async (req, res, next) => {
         }
     }
 };
-
-
-
 
 const updateMyProfile = async (req, res, next) => {
     const userId = req.userId;
