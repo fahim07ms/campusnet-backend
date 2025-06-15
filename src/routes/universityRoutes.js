@@ -10,3 +10,10 @@ router.get("/", universityController.getUniversities);
 module.exports = {
     universityRoutes: router,
 };
+
+
+router.post("/", authMiddleware, universityController.createUniversity);
+router.put("/:universityId", authMiddleware, universityController.updateUniversity);
+router.delete("/:universityId", authMiddleware, universityController.deleteUniversity);
+
+
