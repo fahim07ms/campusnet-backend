@@ -1718,6 +1718,29 @@ paths:
         parameters:
             - $ref: "#/components/parameters/communityIdParam"
             - $ref: "#/components/parameters/userIdParam"
+        get:
+            tags:
+                - Communities
+            summary: Get particular user within the specified community
+            security:
+                - bearerAuth: []
+            response:
+                "200":
+                    description: Member details found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/CommunityMember"
+                "400":
+                    $ref: "#/components/responses/BadRequestError"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "403":
+                    $ref: "#/components/responses/ForbiddenError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         put:
             tags:
                 - Communities
@@ -1754,6 +1777,10 @@ paths:
             responses:
                 "204":
                     description: Member removed.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SuccessMessage"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "403":
