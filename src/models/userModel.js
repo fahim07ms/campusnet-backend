@@ -121,8 +121,7 @@ const getUserById = async (client, userId) => {
                 username,
                 role,
                 is_verified,
-                is_active,
-                password -- Include password for authentication checks (e.g., updateMyPassword)
+                is_active
             FROM users
             WHERE id = $1
         `,
@@ -134,7 +133,9 @@ const getUserById = async (client, userId) => {
         return result.rows[0];
     } catch (err) {
         console.error(`Error fetching user by ID ${userId}:`, err);
-        throw CustomError.internalServerError("Failed to retrieve user details");
+        throw CustomError.internalServerError(
+            "Failed to retrieve user details",
+        );
     }
 };
 
@@ -142,7 +143,7 @@ const updateUserPassword = async (client, userId, newPassword) => {
     const query = {
         text: `
             UPDATE users
-            SET password = $1,
+            SET password_hash = $1,
                 updated_at = NOW()
             WHERE id = $2
             RETURNING id
@@ -159,23 +160,27 @@ const updateUserPassword = async (client, userId, newPassword) => {
     }
 };
 
-const updateUserProfile = async (client, userId, {
-    first_name,
-    last_name,
-    bio,
-    birth_date,
-    phone,
-    student_id,
-    graduation_year,
-    department,
-    interests,
-    address,
-    profile_picture,
-    cover_photo,
-    profile_visibility_public,
-    connection_visibility_public,
-    university_id,
-}) => {
+const updateUserProfile = async (
+    client,
+    userId,
+    {
+        first_name,
+        last_name,
+        bio,
+        birth_date,
+        phone,
+        student_id,
+        graduation_year,
+        department,
+        interests,
+        address,
+        profile_picture,
+        cover_photo,
+        profile_visibility_public,
+        connection_visibility_public,
+        university_id,
+    },
+) => {
     const fields = [];
     const values = [];
     let paramIndex = 1;
@@ -269,8 +274,8 @@ const updateUserProfile = async (client, userId, {
 const getUserEducation = async (client, userId) => {
     const query = {
         text: `
-            SELECT id, university_name, degree, field_of_study, start_date, end_date, description
-            FROM user_education
+            SELECT id, institution, degree, field_of_study, start_date, end_date
+            FROM education
             WHERE user_id = $1
             ORDER BY start_date DESC
         `,
@@ -282,18 +287,39 @@ const getUserEducation = async (client, userId) => {
         return result.rows;
     } catch (err) {
         console.error(`Error fetching education for user ${userId}:`, err);
-        throw CustomError.internalServerError("Failed to retrieve user education");
+        throw CustomError.internalServerError(
+            "Failed to retrieve user education",
+        );
     }
 };
 
-const addEducation = async (client, userId, { university_name, degree, field_of_study, start_date, end_date, description }) => {
+const addEducation = async (
+    client,
+    userId,
+    {
+        university_name,
+        degree,
+        field_of_study,
+        start_date,
+        end_date,
+        description,
+    },
+) => {
     const query = {
         text: `
-            INSERT INTO user_education (user_id, university_name, degree, field_of_study, start_date, end_date, description)
+            INSERT INTO education (user_id, institution, degree, field_of_study, start_date, end_date)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING id, university_name, degree, field_of_study, start_date, end_date, description
+            RETURNING id, institution, degree, field_of_study, start_date, end_date
         `,
-        values: [userId, university_name, degree, field_of_study, start_date, end_date, description],
+        values: [
+            userId,
+            university_name,
+            degree,
+            field_of_study,
+            start_date,
+            end_date,
+            description,
+        ],
     };
 
     try {
@@ -305,7 +331,19 @@ const addEducation = async (client, userId, { university_name, degree, field_of_
     }
 };
 
-const updateEducation = async (client, userId, educationId, { university_name, degree, field_of_study, start_date, end_date, description }) => {
+const updateEducation = async (
+    client,
+    userId,
+    educationId,
+    {
+        university_name,
+        degree,
+        field_of_study,
+        start_date,
+        end_date,
+        description,
+    },
+) => {
     const fields = [];
     const values = [];
     let paramIndex = 1;
@@ -344,7 +382,7 @@ const updateEducation = async (client, userId, educationId, { university_name, d
 
     const query = {
         text: `
-            UPDATE user_education
+            UPDATE education
             SET ${fields.join(", ")}, updated_at = NOW()
             WHERE id = $${paramIndex++} AND user_id = $${paramIndex}
             RETURNING id, university_name, degree, field_of_study, start_date, end_date, description
@@ -356,7 +394,10 @@ const updateEducation = async (client, userId, educationId, { university_name, d
         const result = await client.query(query);
         return result.rows[0];
     } catch (err) {
-        console.error(`Error updating education ${educationId} for user ${userId}:`, err);
+        console.error(
+            `Error updating education ${educationId} for user ${userId}:`,
+            err,
+        );
         throw CustomError.internalServerError("Failed to update education");
     }
 };
@@ -375,7 +416,10 @@ const deleteEducation = async (client, userId, educationId) => {
         const result = await client.query(query);
         return result.rowCount; // Returns 1 if deleted, 0 if not found
     } catch (err) {
-        console.error(`Error deleting education ${educationId} for user ${userId}:`, err);
+        console.error(
+            `Error deleting education ${educationId} for user ${userId}:`,
+            err,
+        );
         throw CustomError.internalServerError("Failed to delete education");
     }
 };
@@ -396,18 +440,31 @@ const getUserAchievements = async (client, userId) => {
         return result.rows;
     } catch (err) {
         console.error(`Error fetching achievements for user ${userId}:`, err);
-        throw CustomError.internalServerError("Failed to retrieve user achievements");
+        throw CustomError.internalServerError(
+            "Failed to retrieve user achievements",
+        );
     }
 };
 
-const addAchievement = async (client, userId, { title, description, date_achieved, issued_by, credential_url }) => {
+const addAchievement = async (
+    client,
+    userId,
+    { title, description, date_achieved, issued_by, credential_url },
+) => {
     const query = {
         text: `
             INSERT INTO user_achievements (user_id, title, description, date_achieved, issued_by, credential_url)
             VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING id, title, description, date_achieved, issued_by, credential_url
         `,
-        values: [userId, title, description, date_achieved, issued_by, credential_url],
+        values: [
+            userId,
+            title,
+            description,
+            date_achieved,
+            issued_by,
+            credential_url,
+        ],
     };
 
     try {
@@ -419,7 +476,12 @@ const addAchievement = async (client, userId, { title, description, date_achieve
     }
 };
 
-const updateAchievement = async (client, userId, achievementId, { title, description, date_achieved, issued_by, credential_url }) => {
+const updateAchievement = async (
+    client,
+    userId,
+    achievementId,
+    { title, description, date_achieved, issued_by, credential_url },
+) => {
     const fields = [];
     const values = [];
     let paramIndex = 1;
@@ -466,7 +528,10 @@ const updateAchievement = async (client, userId, achievementId, { title, descrip
         const result = await client.query(query);
         return result.rows[0];
     } catch (err) {
-        console.error(`Error updating achievement ${achievementId} for user ${userId}:`, err);
+        console.error(
+            `Error updating achievement ${achievementId} for user ${userId}:`,
+            err,
+        );
         throw CustomError.internalServerError("Failed to update achievement");
     }
 };
@@ -485,7 +550,10 @@ const deleteAchievement = async (client, userId, achievementId) => {
         const result = await client.query(query);
         return result.rowCount; // Returns 1 if deleted, 0 if not found
     } catch (err) {
-        console.error(`Error deleting achievement ${achievementId} for user ${userId}:`, err);
+        console.error(
+            `Error deleting achievement ${achievementId} for user ${userId}:`,
+            err,
+        );
         throw CustomError.internalServerError("Failed to delete achievement");
     }
 };

@@ -30,7 +30,15 @@ const { communitiesRoutes } = require("./routes/communitiesRoutes");
 const app = express();
 
 // Use middlewares
-app.use(cors());
+app.use(
+    cors({
+        origin:
+            process.env.NODE_ENV == "production"
+                ? process.env.FRONTEND_URL
+                : "http://localhost:3000",
+        credentials: true,
+    }),
+);
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
@@ -69,7 +77,7 @@ SwaggerParser.bundle(path.join(__dirname, "docs", "openapi.yaml"))
         app.use("/api/v1/docs", swaggerUi.serve, swaggerUi.setup(api));
     })
     .catch((err) => {
-        console.error("❌ Failed to load OpenAPI docs:", err);
+        console.error("Failed to load OpenAPI docs:", err);
     });
 
 module.exports = app;

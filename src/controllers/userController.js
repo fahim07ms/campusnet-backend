@@ -105,7 +105,9 @@ const getMe = async (req, res, next) => {
 
         res.status(200).json({
             message: "User details retrieved successfully.",
-            data: user,
+            data: {
+                user,
+            },
         });
     } catch (error) {
         if (error.name && error.code) {
@@ -159,8 +161,11 @@ const updateMyPassword = async (req, res, next) => {
 
         // In a real application, you would hash the currentPassword and compare it with the stored hash
         // For now, we'll do a simple comparison (replace with bcrypt.compare in production)
-        if (currentPassword !== user.password) { // Assuming user.password is plain text for now, will be hashed in real app
-            return next(CustomError.unauthorized("Incorrect current password."));
+        if (currentPassword !== user.password) {
+            // Assuming user.password is plain text for now, will be hashed in real app
+            return next(
+                CustomError.unauthorized("Incorrect current password."),
+            );
         }
 
         // In a real application, you would hash the newPassword before storing it
@@ -235,35 +240,63 @@ const getUserById = async (req, res, next) => {
 
 const updateMyProfile = async (req, res, next) => {
     const userId = req.userId;
-    const { first_name, last_name, bio, birth_date, phone, student_id, graduation_year, department, interests, address, profile_picture, cover_photo, profile_visibility_public, connection_visibility_public, university_id } = req.body;
+    const {
+        first_name,
+        last_name,
+        bio,
+        birth_date,
+        phone,
+        student_id,
+        graduation_year,
+        department,
+        interests,
+        address,
+        profile_picture,
+        cover_photo,
+        profile_visibility_public,
+        connection_visibility_public,
+        university_id,
+    } = req.body;
 
     if (!userId) {
-        return next(CustomError.unauthorized("Authentication required. User ID not found in request."));
+        return next(
+            CustomError.unauthorized(
+                "Authentication required. User ID not found in request.",
+            ),
+        );
     }
 
     let client;
     try {
         client = await pool.connect();
-        const updatedProfile = await UserModel.updateUserProfile(client, userId, {
-            first_name,
-            last_name,
-            bio,
-            birth_date,
-            phone,
-            student_id,
-            graduation_year,
-            department,
-            interests,
-            address,
-            profile_picture,
-            cover_photo,
-            profile_visibility_public,
-            connection_visibility_public,
-            university_id,
-        });
+        const updatedProfile = await UserModel.updateUserProfile(
+            client,
+            userId,
+            {
+                first_name,
+                last_name,
+                bio,
+                birth_date,
+                phone,
+                student_id,
+                graduation_year,
+                department,
+                interests,
+                address,
+                profile_picture,
+                cover_photo,
+                profile_visibility_public,
+                connection_visibility_public,
+                university_id,
+            },
+        );
 
         if (!updatedProfile) {
-            return next(CustomError.notFound("User profile not found or no changes made."));
+            return next(
+                CustomError.notFound(
+                    "User profile not found or no changes made.",
+                ),
+            );
         }
 
         res.status(200).json({
@@ -274,7 +307,10 @@ const updateMyProfile = async (req, res, next) => {
         if (error.name && error.code) {
             next(error);
         } else {
-            console.error(`Unexpected error in updateMyProfile controller for user ${userId}:`, error);
+            console.error(
+                `Unexpected error in updateMyProfile controller for user ${userId}:`,
+                error,
+            );
             next(
                 CustomError.internalServerError(
                     "An unexpected error occurred while updating the profile.",
@@ -292,7 +328,11 @@ const getMyEducation = async (req, res, next) => {
     const userId = req.userId;
 
     if (!userId) {
-        return next(CustomError.unauthorized("Authentication required. User ID not found in request."));
+        return next(
+            CustomError.unauthorized(
+                "Authentication required. User ID not found in request.",
+            ),
+        );
     }
 
     let client;
@@ -308,7 +348,10 @@ const getMyEducation = async (req, res, next) => {
         if (error.name && error.code) {
             next(error);
         } else {
-            console.error(`Unexpected error in getMyEducation controller for user ${userId}:`, error);
+            console.error(
+                `Unexpected error in getMyEducation controller for user ${userId}:`,
+                error,
+            );
             next(
                 CustomError.internalServerError(
                     "An unexpected error occurred while fetching education details.",
@@ -324,14 +367,29 @@ const getMyEducation = async (req, res, next) => {
 
 const addMyEducation = async (req, res, next) => {
     const userId = req.userId;
-    const { university_name, degree, field_of_study, start_date, end_date, description } = req.body;
+    const {
+        university_name,
+        degree,
+        field_of_study,
+        start_date,
+        end_date,
+        description,
+    } = req.body;
 
     if (!userId) {
-        return next(CustomError.unauthorized("Authentication required. User ID not found in request."));
+        return next(
+            CustomError.unauthorized(
+                "Authentication required. User ID not found in request.",
+            ),
+        );
     }
 
     if (!university_name || !degree || !field_of_study || !start_date) {
-        return next(CustomError.badRequest("University name, degree, field of study, and start date are required."));
+        return next(
+            CustomError.badRequest(
+                "University name, degree, field of study, and start date are required.",
+            ),
+        );
     }
 
     let client;
@@ -354,7 +412,10 @@ const addMyEducation = async (req, res, next) => {
         if (error.name && error.code) {
             next(error);
         } else {
-            console.error(`Unexpected error in addMyEducation controller for user ${userId}:`, error);
+            console.error(
+                `Unexpected error in addMyEducation controller for user ${userId}:`,
+                error,
+            );
             next(
                 CustomError.internalServerError(
                     "An unexpected error occurred while adding education details.",
@@ -371,10 +432,21 @@ const addMyEducation = async (req, res, next) => {
 const updateMyEducation = async (req, res, next) => {
     const userId = req.userId;
     const { educationId } = req.params;
-    const { university_name, degree, field_of_study, start_date, end_date, description } = req.body;
+    const {
+        university_name,
+        degree,
+        field_of_study,
+        start_date,
+        end_date,
+        description,
+    } = req.body;
 
     if (!userId) {
-        return next(CustomError.unauthorized("Authentication required. User ID not found in request."));
+        return next(
+            CustomError.unauthorized(
+                "Authentication required. User ID not found in request.",
+            ),
+        );
     }
 
     if (!educationId) {
@@ -384,17 +456,26 @@ const updateMyEducation = async (req, res, next) => {
     let client;
     try {
         client = await pool.connect();
-        const updatedEducation = await UserModel.updateEducation(client, userId, educationId, {
-            university_name,
-            degree,
-            field_of_study,
-            start_date,
-            end_date,
-            description,
-        });
+        const updatedEducation = await UserModel.updateEducation(
+            client,
+            userId,
+            educationId,
+            {
+                university_name,
+                degree,
+                field_of_study,
+                start_date,
+                end_date,
+                description,
+            },
+        );
 
         if (!updatedEducation) {
-            return next(CustomError.notFound("Education entry not found or no changes made."));
+            return next(
+                CustomError.notFound(
+                    "Education entry not found or no changes made.",
+                ),
+            );
         }
 
         res.status(200).json({
@@ -405,7 +486,10 @@ const updateMyEducation = async (req, res, next) => {
         if (error.name && error.code) {
             next(error);
         } else {
-            console.error(`Unexpected error in updateMyEducation controller for user ${userId} and education ${educationId}:`, error);
+            console.error(
+                `Unexpected error in updateMyEducation controller for user ${userId} and education ${educationId}:`,
+                error,
+            );
             next(
                 CustomError.internalServerError(
                     "An unexpected error occurred while updating education details.",
@@ -424,7 +508,11 @@ const deleteMyEducation = async (req, res, next) => {
     const { educationId } = req.params;
 
     if (!userId) {
-        return next(CustomError.unauthorized("Authentication required. User ID not found in request."));
+        return next(
+            CustomError.unauthorized(
+                "Authentication required. User ID not found in request.",
+            ),
+        );
     }
 
     if (!educationId) {
@@ -434,7 +522,11 @@ const deleteMyEducation = async (req, res, next) => {
     let client;
     try {
         client = await pool.connect();
-        const deletedCount = await UserModel.deleteEducation(client, userId, educationId);
+        const deletedCount = await UserModel.deleteEducation(
+            client,
+            userId,
+            educationId,
+        );
 
         if (deletedCount === 0) {
             return next(CustomError.notFound("Education entry not found."));
@@ -447,7 +539,10 @@ const deleteMyEducation = async (req, res, next) => {
         if (error.name && error.code) {
             next(error);
         } else {
-            console.error(`Unexpected error in deleteMyEducation controller for user ${userId} and education ${educationId}:`, error);
+            console.error(
+                `Unexpected error in deleteMyEducation controller for user ${userId} and education ${educationId}:`,
+                error,
+            );
             next(
                 CustomError.internalServerError(
                     "An unexpected error occurred while deleting education details.",
@@ -465,13 +560,20 @@ const getMyAchievements = async (req, res, next) => {
     const userId = req.userId;
 
     if (!userId) {
-        return next(CustomError.unauthorized("Authentication required. User ID not found in request."));
+        return next(
+            CustomError.unauthorized(
+                "Authentication required. User ID not found in request.",
+            ),
+        );
     }
 
     let client;
     try {
         client = await pool.connect();
-        const achievements = await UserModel.getUserAchievements(client, userId);
+        const achievements = await UserModel.getUserAchievements(
+            client,
+            userId,
+        );
 
         res.status(200).json({
             message: "Achievements retrieved successfully.",
@@ -481,7 +583,10 @@ const getMyAchievements = async (req, res, next) => {
         if (error.name && error.code) {
             next(error);
         } else {
-            console.error(`Unexpected error in getMyAchievements controller for user ${userId}:`, error);
+            console.error(
+                `Unexpected error in getMyAchievements controller for user ${userId}:`,
+                error,
+            );
             next(
                 CustomError.internalServerError(
                     "An unexpected error occurred while fetching achievements.",
@@ -497,14 +602,23 @@ const getMyAchievements = async (req, res, next) => {
 
 const addMyAchievement = async (req, res, next) => {
     const userId = req.userId;
-    const { title, description, date_achieved, issued_by, credential_url } = req.body;
+    const { title, description, date_achieved, issued_by, credential_url } =
+        req.body;
 
     if (!userId) {
-        return next(CustomError.unauthorized("Authentication required. User ID not found in request."));
+        return next(
+            CustomError.unauthorized(
+                "Authentication required. User ID not found in request.",
+            ),
+        );
     }
 
     if (!title || !date_achieved) {
-        return next(CustomError.badRequest("Achievement title and date achieved are required."));
+        return next(
+            CustomError.badRequest(
+                "Achievement title and date achieved are required.",
+            ),
+        );
     }
 
     let client;
@@ -526,7 +640,10 @@ const addMyAchievement = async (req, res, next) => {
         if (error.name && error.code) {
             next(error);
         } else {
-            console.error(`Unexpected error in addMyAchievement controller for user ${userId}:`, error);
+            console.error(
+                `Unexpected error in addMyAchievement controller for user ${userId}:`,
+                error,
+            );
             next(
                 CustomError.internalServerError(
                     "An unexpected error occurred while adding achievement details.",
@@ -543,10 +660,15 @@ const addMyAchievement = async (req, res, next) => {
 const updateMyAchievement = async (req, res, next) => {
     const userId = req.userId;
     const { achievementId } = req.params;
-    const { title, description, date_achieved, issued_by, credential_url } = req.body;
+    const { title, description, date_achieved, issued_by, credential_url } =
+        req.body;
 
     if (!userId) {
-        return next(CustomError.unauthorized("Authentication required. User ID not found in request."));
+        return next(
+            CustomError.unauthorized(
+                "Authentication required. User ID not found in request.",
+            ),
+        );
     }
 
     if (!achievementId) {
@@ -556,16 +678,25 @@ const updateMyAchievement = async (req, res, next) => {
     let client;
     try {
         client = await pool.connect();
-        const updatedAchievement = await UserModel.updateAchievement(client, userId, achievementId, {
-            title,
-            description,
-            date_achieved,
-            issued_by,
-            credential_url,
-        });
+        const updatedAchievement = await UserModel.updateAchievement(
+            client,
+            userId,
+            achievementId,
+            {
+                title,
+                description,
+                date_achieved,
+                issued_by,
+                credential_url,
+            },
+        );
 
         if (!updatedAchievement) {
-            return next(CustomError.notFound("Achievement entry not found or no changes made."));
+            return next(
+                CustomError.notFound(
+                    "Achievement entry not found or no changes made.",
+                ),
+            );
         }
 
         res.status(200).json({
@@ -576,7 +707,10 @@ const updateMyAchievement = async (req, res, next) => {
         if (error.name && error.code) {
             next(error);
         } else {
-            console.error(`Unexpected error in updateMyAchievement controller for user ${userId} and achievement ${achievementId}:`, error);
+            console.error(
+                `Unexpected error in updateMyAchievement controller for user ${userId} and achievement ${achievementId}:`,
+                error,
+            );
             next(
                 CustomError.internalServerError(
                     "An unexpected error occurred while updating achievement details.",
@@ -595,7 +729,11 @@ const deleteMyAchievement = async (req, res, next) => {
     const { achievementId } = req.params;
 
     if (!userId) {
-        return next(CustomError.unauthorized("Authentication required. User ID not found in request."));
+        return next(
+            CustomError.unauthorized(
+                "Authentication required. User ID not found in request.",
+            ),
+        );
     }
 
     if (!achievementId) {
@@ -605,7 +743,11 @@ const deleteMyAchievement = async (req, res, next) => {
     let client;
     try {
         client = await pool.connect();
-        const deletedCount = await UserModel.deleteAchievement(client, userId, achievementId);
+        const deletedCount = await UserModel.deleteAchievement(
+            client,
+            userId,
+            achievementId,
+        );
 
         if (deletedCount === 0) {
             return next(CustomError.notFound("Achievement entry not found."));
@@ -618,7 +760,10 @@ const deleteMyAchievement = async (req, res, next) => {
         if (error.name && error.code) {
             next(error);
         } else {
-            console.error(`Unexpected error in deleteMyAchievement controller for user ${userId} and achievement ${achievementId}:`, error);
+            console.error(
+                `Unexpected error in deleteMyAchievement controller for user ${userId} and achievement ${achievementId}:`,
+                error,
+            );
             next(
                 CustomError.internalServerError(
                     "An unexpected error occurred while deleting achievement details.",
@@ -637,7 +782,11 @@ const updateMyBloodGroup = async (req, res, next) => {
     const { blood_group } = req.body;
 
     if (!userId) {
-        return next(CustomError.unauthorized("Authentication required. User ID not found in request."));
+        return next(
+            CustomError.unauthorized(
+                "Authentication required. User ID not found in request.",
+            ),
+        );
     }
 
     if (!blood_group) {
@@ -647,10 +796,18 @@ const updateMyBloodGroup = async (req, res, next) => {
     let client;
     try {
         client = await pool.connect();
-        const updatedProfile = await UserModel.updateUserBloodGroup(client, userId, blood_group);
+        const updatedProfile = await UserModel.updateUserBloodGroup(
+            client,
+            userId,
+            blood_group,
+        );
 
         if (!updatedProfile) {
-            return next(CustomError.notFound("User profile not found or no changes made."));
+            return next(
+                CustomError.notFound(
+                    "User profile not found or no changes made.",
+                ),
+            );
         }
 
         res.status(200).json({
@@ -661,7 +818,10 @@ const updateMyBloodGroup = async (req, res, next) => {
         if (error.name && error.code) {
             next(error);
         } else {
-            console.error(`Unexpected error in updateMyBloodGroup controller for user ${userId}:`, error);
+            console.error(
+                `Unexpected error in updateMyBloodGroup controller for user ${userId}:`,
+                error,
+            );
             next(
                 CustomError.internalServerError(
                     "An unexpected error occurred while updating blood group.",
@@ -692,5 +852,3 @@ module.exports = {
     deleteMyAchievement,
     updateMyBloodGroup,
 };
-
-

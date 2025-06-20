@@ -79,7 +79,7 @@ export const updateUserIsActive = async (client, userId, is_active) => {
 // Get base user data from id
 export const userDataFromId = async (client, userId) => {
     const query =
-        "SELECT u.id as user_id, u.email, u.username, u.role, u.is_active, u.is_verified, u.last_login, u.createdAt, u.updatedAt, univ.name, univ.logo_url " +
+        "SELECT u.id as user_id, u.email, u.username, u.role, u.is_active, u.is_verified, u.last_login, u.created_at, u.updated_at, univ.name, univ.logo_url, " +
         "up.first_name, up.last_name, up.bio, up.profile_picture, up.cover_photo, up.profile_visibility_public, up.connection_visibility_public, up.interests " +
         "FROM users u LEFT JOIN user_profiles up ON u.id = up.user_id " +
         "LEFT JOIN universities univ ON u.university_id = univ.id " +
