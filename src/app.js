@@ -24,12 +24,21 @@ const globalLimiter = rateLimit({
 const { authRoutes } = require("./routes/authRoutes");
 const { userRoutes } = require("./routes/userRoutes");
 const { universityRoutes } = require("./routes/universityRoutes");
+const { communitiesRoutes } = require("./routes/communitiesRoutes");
 
 // Initialize express
 const app = express();
 
 // Use middlewares
-app.use(cors());
+app.use(
+    cors({
+        origin:
+            process.env.NODE_ENV == "production"
+                ? process.env.FRONTEND_URL
+                : "http://localhost:3000",
+        credentials: true,
+    }),
+);
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
@@ -61,13 +70,14 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth", authLimiter, authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/universities", universityRoutes);
+app.use("/api/v1/communities", communitiesRoutes);
 
 SwaggerParser.bundle(path.join(__dirname, "docs", "openapi.yaml"))
     .then((api) => {
         app.use("/api/v1/docs", swaggerUi.serve, swaggerUi.setup(api));
     })
     .catch((err) => {
-        console.error("❌ Failed to load OpenAPI docs:", err);
+        console.error("Failed to load OpenAPI docs:", err);
     });
 
 module.exports = app;

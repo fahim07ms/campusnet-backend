@@ -89,7 +89,6 @@ const register = async (req, res) => {
             client,
             universityDomain,
         );
-        console.log(university);
         if (!university) {
             await client.query("ROLLBACK");
             return res.status(404).json(
@@ -249,7 +248,12 @@ const login = async (req, res) => {
         // Return user data
         const userData = await AuthModel.userDataFromId(client, user.id);
 
-        res.cookie("refreshToken", refreshToken);
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "Strict",
+            expires: expiresAt,
+        });
 
         await client.query("COMMIT");
         res.status(200).json({
