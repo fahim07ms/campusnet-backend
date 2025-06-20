@@ -49,6 +49,7 @@ const getAllUsers = async (client, { page = 1, limit = 10 }) => {
         };
     } catch (err) {
         console.error("Error fetching users:", err);
+        
         throw CustomError.internalServerError("Failed to retrieve users");
     }
 };

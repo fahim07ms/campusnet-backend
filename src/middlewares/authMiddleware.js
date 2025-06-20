@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const customError = require("../utils/errors");
+
 const pool = require("../config/db");
+
 const AuthModel = require("../models/authModel");
 
 // Middleware to verify access token

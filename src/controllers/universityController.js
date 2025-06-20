@@ -1,4 +1,5 @@
 const pool = require("../config/db.js");
+
 const UniversityModel = require("../models/universityModel.js");
 const CustomError = require("../utils/errors.js");
 

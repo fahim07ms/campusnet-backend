@@ -1,4 +1,5 @@
 const pool = require("../config/db.js");
+
 const UserModel = require("../models/userModel.js");
 const CustomError = require("../utils/errors.js");
 

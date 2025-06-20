@@ -1,4 +1,5 @@
 const express = require("express");
+
 const universityController = require("../controllers/universityController.js");
 
 const { authMiddleware } = require("../middlewares/authMiddleware.js");
