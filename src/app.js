@@ -4,7 +4,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
-// const rateLimit = require("express-rate-limit");
+const rateLimit = require("express-rate-limit");
 dotenv.config();
 
 // Swagger Documentation UI Setup
