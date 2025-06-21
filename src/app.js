@@ -4,7 +4,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
-const rateLimit = require("express-rate-limit");
+// const rateLimit = require("express-rate-limit");
 dotenv.config();
 
 // Swagger Documentation UI Setup
@@ -12,13 +12,13 @@ const swaggerUi = require("swagger-ui-express");
 const SwaggerParser = require("@apidevtools/swagger-parser");
 const path = require("path");
 
-const globalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 1000,
-    message: { error: "Too many requests, please try again after an hour" },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
+// const globalLimiter = rateLimit({
+//     windowMs: 15 * 60 * 1000,
+//     max: 1000,
+//     message: { error: "Too many requests, please try again after an hour" },
+//     standardHeaders: true,
+//     legacyHeaders: false,
+// });
 
 // Import routes from routes folder
 const { authRoutes } = require("./routes/authRoutes");
@@ -43,18 +43,18 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser());
-app.use(globalLimiter);
+// app.use(globalLimiter);
 
 // Rate Limiting Configurations
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5,
-    message: {
-        error: "Too many login attempts, please try again after an hour",
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
+// const authLimiter = rateLimit({
+//     windowMs: 15 * 60 * 1000, // 15 minutes
+//     max: 10,
+//     message: {
+//         error: "Too many login attempts, please try again after an hour",
+//     },
+//     standardHeaders: true,
+//     legacyHeaders: false,
+// });
 
 const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -67,7 +67,7 @@ app.get("/", (req, res) => {
     return res.status(200).json({ message: "Server is running!" });
 });
 
-app.use("/api/v1/auth", authLimiter, authRoutes);
+app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/universities", universityRoutes);
 app.use("/api/v1/communities", communitiesRoutes);
