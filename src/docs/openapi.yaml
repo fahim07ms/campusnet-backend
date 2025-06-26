@@ -445,6 +445,9 @@ components:
                 content:
                     type: string
                     format: text
+                authorId:
+                    type: string
+                    format: uuid
                 communityId:
                     type: string
                     format: uuid
@@ -468,7 +471,7 @@ components:
                 isPublic:
                     type: boolean
                     default: true
-                tags: # Array of tag names or tag IDs
+                tags:
                     type: array
                     items:
                         type: string
@@ -684,20 +687,6 @@ components:
                     type: integer
                 limit:
                     type: integer
-        # ... Add other PaginatedXResponse schemas as needed for Posts, Events, etc.
-        PaginatedPostsResponse:
-            type: object
-            properties:
-                data:
-                    type: array
-                    items:
-                        $ref: "#/components/schemas/Post"
-                total:
-                    type: integer
-                page:
-                    type: integer
-                limit:
-                    type: integer
 
         ########################
         # Responses schemas
@@ -748,6 +737,21 @@ components:
                             items:
                                 $ref: "#/components/schemas/Community"
 
+        PaginatedPostsResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                data:
+                    type: object
+                    properties:
+                        posts:
+                            type: array
+                            items:
+                                $ref: "schemas/Post.yaml"
+                meta:
+                    $ref: "schemas/PaginationMetadata.yaml"
+
         CommunityResponse:
             type: object
             properties:
@@ -758,6 +762,17 @@ components:
                     properties:
                         community:
                             $ref: "#/components/schemas/Community"
+
+        SinglePostResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                data:
+                    type: object
+                    properties:
+                        post:
+                            $ref: "#/components/schemas/Post"
 
     #=====================================================
     # Common Response Definitions
@@ -2102,6 +2117,8 @@ paths:
             tags:
                 - Posts
             summary: Get a feed of posts
+            security:
+                - bearerAuth: []
             parameters:
                 - $ref: "#/components/parameters/pageParam"
                 - $ref: "#/components/parameters/limitParam"
@@ -2159,18 +2176,22 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Post"
+                                $ref: "#/components/schemas/SinglePostResponse"
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "403":
                     $ref: "#/components/responses/ForbiddenError" # e.g., trying to post in a group not member of
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /posts/{postId}:
         parameters:
             - $ref: "#/components/parameters/postIdParam"
         get:
+            security:
+                - bearerAuth: []
             tags:
                 - Posts
             summary: Get details of a specific post
@@ -2180,9 +2201,18 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Post"
+                                $ref: "#/components/schemas/SinglePostResponse"
+
+                "400":
+                    $ref: "#/components/responses/BadRequestError"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "403":
+                    $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         put:
             tags:
                 - Posts
@@ -2194,14 +2224,14 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/PostRequest" # Can be partial
+                            $ref: "#/components/schemas/Post" # Can be partial
             responses:
                 "200":
                     description: Post updated.
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Post"
+                                $ref: "#/components/schemas/SinglePostResponse"
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
@@ -2219,6 +2249,16 @@ paths:
             responses:
                 "204":
                     description: Post deleted.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Post successfully deleted"
+
+
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "403":
@@ -2241,14 +2281,60 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Post"
+                                $ref: "#/components/schemas/SinglePostResponse"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "403":
                     $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
-    # ... (Reject, Pin, Feature for Posts)
+
+    /posts/{postId}/feature:
+        parameters:
+            - $ref: "#/components/parameters/postIdParam"
+        post:
+            tags:
+                - Posts
+            summary: Feature an approved post (Admin/Moderator)
+            security:
+                - bearerAuth: [ ]
+            responses:
+                "200":
+                    description: Post featured.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SinglePostResponse"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "403":
+                    $ref: "#/components/responses/ForbiddenError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+
+    /posts/{postId}/pin:
+        parameters:
+            - $ref: "#/components/parameters/postIdParam"
+        post:
+            tags:
+                - Posts
+            summary: Pin an approved post (Admin/Moderator)
+            security:
+                - bearerAuth: [ ]
+            responses:
+                "200":
+                    description: Post pinned.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SinglePostResponse"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "403":
+                    $ref: "#/components/responses/ForbiddenError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+
 
     /users/me/posts/saved:
         get:
@@ -2257,15 +2343,16 @@ paths:
             summary: Get posts saved by the current user
             security:
                 - bearerAuth: []
+            parameters:
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
             responses:
                 "200":
                     description: List of saved posts.
                     content:
                         application/json:
                             schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/Post"
+                                $ref: "#/components/schemas/PaginatedPostsResponse"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
 
@@ -2281,6 +2368,14 @@ paths:
             responses:
                 "201":
                     description: Post saved.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Post saved!"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "404":
@@ -2296,6 +2391,14 @@ paths:
             responses:
                 "204":
                     description: Post unsaved.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Post successfully unsaved"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "404":

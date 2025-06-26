@@ -6,8 +6,10 @@ properties:
     format: uuid
     readOnly: true
     example: "523e4567-e89b-12d3-a456-426614174000"
-  author:
-    $ref: "./User.yaml"
+  authorId:
+    type: string
+    format: uuid
+    readOnly: true
   communityId:
     type: string
     format: uuid
