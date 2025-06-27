@@ -774,6 +774,21 @@ components:
                         post:
                             $ref: "#/components/schemas/Post"
 
+        PaginatedCommentResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                data:
+                    type: object
+                    properties:
+                        comments:
+                            type: array
+                            items:
+                                $ref: "schemas/Comment.yaml"
+                meta:
+                    $ref: "schemas/PaginationMetadata.yaml"
+
     #=====================================================
     # Common Response Definitions
     #=====================================================
@@ -2438,9 +2453,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                type: array # PaginatedCommentsResponse
-                                items:
-                                    $ref: "#/components/schemas/Comment"
+                                $ref: "#/components/schemas/PaginatedCommentResponse"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
         post:

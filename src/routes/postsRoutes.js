@@ -8,8 +8,8 @@ const {
     updatePost,
     deletePost,
     approvePost,
-    pinPost,
-    featurePost,
+    togglePinPost,
+    toggleFeaturePost,
 } = require('../controllers/postsControllers');
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const { isPostModerator } = require('../middlewares/permissions');
@@ -24,8 +24,8 @@ router.delete('/:postId', authMiddleware, deletePost);
 
 // Moderator routes
 router.post('/:postId/approve', authMiddleware, isPostModerator, approvePost);
-router.post('/:postId/pin', authMiddleware, isPostModerator, pinPost);
-router.post('/:postId/feature', authMiddleware, isPostModerator, featurePost);
+router.post('/:postId/pin', authMiddleware, isPostModerator, togglePinPost);
+router.post('/:postId/feature', authMiddleware, isPostModerator, toggleFeaturePost);
 
 
 module.exports = {

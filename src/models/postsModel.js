@@ -1,5 +1,5 @@
 const CustomError = require("../utils/errors");
-
+const {pool} = require("../config/db");
 /**
  * Get all posts with pagination
  */
@@ -114,9 +114,7 @@ const getPostById = async (client, postId, userId = null) => {
 
     try {
         const result = await client.query(query);
-        if (result.rows.length === 0) {
-            throw CustomError.notFound("Post not found");
-        }
+        if (!result) return null;
 
         // Increment view count
         await client.query(
@@ -259,8 +257,7 @@ const approvePost = async (client, postId, moderatorId) => {
             SET 
                 status = 'approved',
                 approved_by = $1,
-                approved_at = CURRENT_TIMESTAMP,
-                updated_at = CURRENT_TIMESTAMP
+                approved_at = CURRENT_TIMESTAMP
             WHERE id = $2
             RETURNING *
         `,
@@ -309,6 +306,98 @@ const deletePost = async (client, postId, userId) => {
         throw CustomError.internalServerError("Failed to delete post");
     }
 };
+
+
+/**
+ * Toggle pin status for a post
+ */
+const togglePinPost = async (postId) => {
+    const client = await pool.connect();
+    try {
+        // First get current pin status
+        const checkQuery = {
+            text: 'SELECT is_pinned FROM posts WHERE id = $1',
+            values: [postId]
+        };
+
+        const checkResult = await client.query(checkQuery);
+
+        if (checkResult.rows.length === 0) {
+            return null;
+        }
+
+        const currentPinStatus = checkResult.rows[0].is_pinned;
+
+        // Toggle pin status
+        const query = {
+            text: `
+                UPDATE posts 
+                SET is_pinned = NOT is_pinned
+                WHERE id = $1
+                RETURNING *
+            `,
+            values: [postId]
+        };
+
+        const result = await client.query(query);
+
+        return {
+            post: result.rows[0],
+            action: currentPinStatus ? 'unpinned' : 'pinned'
+        };
+    } catch (err) {
+        console.error("Error toggling pin status:", err);
+        throw CustomError.internalServerError("Failed to toggle pin status");
+    } finally {
+        client.release();
+    }
+};
+
+/**
+ * Toggle feature status for a post
+ */
+const toggleFeaturePost = async (postId) => {
+    const client = await pool.connect();
+    try {
+        // First get current feature status
+        const checkQuery = {
+            text: 'SELECT is_featured FROM posts WHERE id = $1',
+            values: [postId]
+        };
+
+        const checkResult = await client.query(checkQuery);
+
+        if (checkResult.rows.length === 0) {
+            return null;
+        }
+
+        const currentFeatureStatus = checkResult.rows[0].is_featured;
+
+        // Toggle feature status
+        const query = {
+            text: `
+                UPDATE posts 
+                SET is_featured = NOT is_featured
+                WHERE id = $1
+                RETURNING *
+            `,
+            values: [postId]
+        };
+
+        const result = await client.query(query);
+
+        return {
+            post: result.rows[0],
+            action: currentFeatureStatus ? 'unfeatured' : 'featured'
+        };
+    } catch (err) {
+        console.error("Error toggling feature status:", err);
+        throw CustomError.internalServerError("Failed to toggle feature status");
+    } finally {
+        client.release();
+    }
+};
+
 
 /**
  * Save a post for a user
@@ -441,6 +530,8 @@ module.exports = {
     updatePost,
     deletePost,
     approvePost,
+    togglePinPost,
+    toggleFeaturePost,
     savePost,
     unsavePost,
     getSavedPosts

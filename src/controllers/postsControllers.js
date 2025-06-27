@@ -70,6 +70,11 @@ const getPostById = async (req, res, next) => {
     try {
         client = await pool.connect();
         const post = await PostsModel.getPostById(client, postId, userId);
+        if (!post) {
+            return res.status(404).json(CustomError.notFound({
+                message: "Post not found"
+            }))
+        }
 
         res.status(200).json({
             message: "Post retrieved successfully.",
@@ -79,12 +84,6 @@ const getPostById = async (req, res, next) => {
         });
     } catch (error) {
             console.error(`Unexpected error in getPostById controller for post ${postId}:`, error);
-            if (error.status === 404) {
-                return res.status(404).json(CustomError.notFound({
-                    message: "Post not found.",
-                }))
-            }
-
             return res.status(500).json(CustomError.internalServerError({
                 message: "An unexpected error occurred while fetching the post.",
             }));
@@ -421,6 +420,58 @@ const getSavedPosts = async (req, res, next) => {
     }
 };
 
+
+/**
+ * Toggle pin status of a post (for moderators)
+ */
+const togglePinPost = async (req, res, next) => {
+    try {
+        const { postId } = req.params;
+
+        const result = await postsModel.togglePinPost(postId);
+        if (!result) {
+            return res.status(404).json(CustomError.notFound({
+                message: "No post found with the given ID."
+            }))
+        }
+
+        return res.status(200).json({
+            message: `Post ${result.action} successfully`,
+            post: result.post
+        });
+    } catch (err) {
+        return res.status(500).json(CustomError.internalServerError({
+            message: "An unexpected error occurred while pinning the post.",
+        }))
+    }
+};
+
+/**
+ * Toggle feature status of a post (for moderators)
+ */
+const toggleFeaturePost = async (req, res, next) => {
+    try {
+        const { postId } = req.params;
+
+        const result = await postsModel.toggleFeaturePost(postId);
+        if (!result) {
+            return res.status(404).json(CustomError.notFound({
+                message: "No post found with the given ID."
+            }))
+        }
+
+        return res.status(200).json({
+            message: `Post ${result.action} successfully`,
+            post: result.post
+        });
+    } catch (err) {
+        return res.status(500).json(CustomError.internalServerError({
+            message: "An unexpected error occurred while featuring the post.",
+        }))
+    }
+};
+
+
 module.exports = {
     getPosts,
     getPostById,
@@ -428,6 +479,8 @@ module.exports = {
     updatePost,
     deletePost,
     approvePost,
+    togglePinPost,
+    toggleFeaturePost,
     savePost,
     unsavePost,
     getSavedPosts
