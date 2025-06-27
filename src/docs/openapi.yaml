@@ -2524,6 +2524,32 @@ paths:
     /comments/{commentId}:
         parameters:
             - $ref: "#/components/parameters/commentIdParam"
+        post:
+            tags:
+                - Comments
+            summary: Add a comment to a comment
+            security:
+                - bearerAuth: [ ]
+            requestBody:
+                description: Among parentId(parent comment), postId or eventId give one accordingly
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/CommentRequest"
+            responses:
+                "201":
+                    description: Comment created.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SingleCommentResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequestError"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
         put:
             tags:
                 - Comments
@@ -2579,6 +2605,31 @@ paths:
                     $ref: "#/components/responses/UnauthorizedError"
                 "403":
                     $ref: "#/components/responses/ForbiddenError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+
+    /comment/{commentId}/comments:
+        parameters:
+            - $ref: "#/components/parameters/commentIdParam"
+        get:
+            tags:
+                - Comments
+            summary: Get comments for a post
+            parameters:
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+                - name: sortBy
+                  in: query
+                  schema:
+                      type: string
+                      enum: [ createdAt, likeCount ]
+            responses:
+                "200":
+                    description: List of comments.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PaginatedCommentResponse"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
 

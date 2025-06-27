@@ -1,7 +1,6 @@
 const { pool } = require("../config/db");
 const {query} = require("express-validator");
 const PostModel = require("./postsModel");
-const countResult = require("pg/lib/query");
 
 const getCommentById = async (client, commentId) => {
     const query = {
@@ -30,7 +29,7 @@ const getAllComments = async (client, identityId, identityField, page = 1, limit
         return null;
     }
 
-    const totalComments = parseInt(countResult.rows[0].count, 10);
+    const totalComments = parseInt(countQuery.rows[0].count, 10);
     const totalPages = Math.ceil(totalComments / limit);
 
     return {

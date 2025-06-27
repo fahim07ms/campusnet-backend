@@ -13,6 +13,7 @@ const {
 } = require('../controllers/postsControllers');
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const { isPostModerator } = require('../middlewares/permissions');
+const {getComments, createComment} = require("../controllers/commentsController");
 
 
 router.get('/', authMiddleware, getPosts);
@@ -26,6 +27,10 @@ router.delete('/:postId', authMiddleware, deletePost);
 router.post('/:postId/approve', authMiddleware, isPostModerator, approvePost);
 router.post('/:postId/pin', authMiddleware, isPostModerator, togglePinPost);
 router.post('/:postId/feature', authMiddleware, isPostModerator, toggleFeaturePost);
+
+// Comments
+router.get("/:postId/comments", authMiddleware, getComments);
+router.post("/:postId/comments", authMiddleware, createComment);
 
 
 module.exports = {
