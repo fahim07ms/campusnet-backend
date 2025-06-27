@@ -1,5 +1,6 @@
 const express = require("express");
 const userController = require("../controllers/userController.js");
+const postsController = require("../controllers/postsControllers");
 const { authMiddleware } = require("../middlewares/authMiddleware.js");
 
 const router = express.Router();
@@ -58,6 +59,11 @@ router.post(
     authMiddleware,
     userController.updateMyBloodGroup,
 );
+
+// Posts save
+router.get("/me/posts/saved", authMiddleware, postsController.getSavedPosts);
+router.post("/me/posts/{postId}/save", authMiddleware, postsController.savePost);
+router.delete("/me/posts/{postId}/save", authMiddleware, postsController.unsavePost);
 
 module.exports = {
     userRoutes: router,
