@@ -1,19 +1,44 @@
-const { pool } = require('../config/db');
+const pool = require('../config/db');
 const CommentModel = require('../models/commentsModel');
 
 const CustomError = require('../utils/errors');
 
-const getComments = async (req, res, next) => {
+const buildCommentTree = (comments) => {
+    const map = {};
+    const roots = [];
+
+    // Index all comments by ID
+    comments.forEach(comment => {
+        map[comment.id] = { ...comment, replies: [] };
+    });
+
+    // Build the tree
+    comments.forEach(comment => {
+        if (comment.parent_id) {
+            // Append to parent’s replies
+            const parent = map[comment.parent_id];
+            if (parent) parent.replies.push(map[comment.id]);
+        } else {
+            // Top-level comment
+            roots.push(map[comment.id]);
+        }
+    });
+
+    return roots;
+}
+
+
+const getComments = async (req, res) => {
     const { postId } = req.params;
     const { eventId } = req.params;
-    const { parentId } = req.params;
+    const { commentId } = req.params;
 
     let identityField, identityId;
     if (postId) {
         identityId = postId;
         identityField = 'post';
-    } else if (parentId) {
-        identityId = parentId;
+    } else if (commentId) {
+        identityId = commentId;
         identityField = 'parent';
     } else if (eventId) {
         identityId = eventId;
@@ -42,7 +67,10 @@ const getComments = async (req, res, next) => {
         return res.status(200).json({
             message: "Successfully retrieved comments.",
             data: {
-                comments: comments,
+                comments: [
+                    ...buildCommentTree(comments.comments)
+                ],
+                meta: comments.meta,
             },
         });
     } catch (error) {
@@ -54,17 +82,14 @@ const getComments = async (req, res, next) => {
             }
         }));
     }
-
-
-
 }
 
 const createComment = async (req, res, next) => {
     const { postId } = req.params;
     const { eventId } = req.params;
-    const { parentId } = req.params;
+    const { parentId } = req.body;
     const { content } = req.body;
-    const { authorId } = req.userId;
+    const authorId = req.userId;
 
     const commentData = {
         content,
@@ -110,7 +135,7 @@ const createComment = async (req, res, next) => {
 
 }
 
-const updateComment = async (req, res, next) => {
+const updateComment = async (req, res) => {
     const { commentId } = req.params;
     const { content } = req.body;
 
@@ -145,17 +170,24 @@ const updateComment = async (req, res, next) => {
 
 const deleteComment = async (req, res, next) => {
     const { commentId } = req.params;
-    const { authorId } = req.userId;
+    const authorId = req.userId;
 
     const client = await pool.connect();
     try {
+        await client.query("BEGIN");
         const comment = await CommentModel.deleteComment(client, commentId, authorId);
+        await client.query("COMMIT");
         if (!comment) {
             return res.status(404).json(CustomError.notFound({
                 message: "No such comment found!"
             }));
         }
+
+        return res.status(200).json({
+            message: "Comment deleted successfully!",
+        })
     } catch (error) {
+        await client.query("ROLLBACK");
         console.error('Error in deleteComment controller:', error);
         return res.status(500).json(CustomError.internalServerError({
             message: "Failed to delete comment. Please try again later.",
