@@ -1,0 +1,32 @@
+type: object
+properties:
+  name:
+    type: string
+    maxLength: 255
+  description:
+    type: string
+    format: text
+    nullable: true
+  rules:
+    type: string
+    format: text
+    nullable: true
+  coverImage:
+    type: string
+    format: url
+    nullable: true
+  logo:
+    type: string
+    format: url
+    nullable: true
+  isPublic:
+    type: boolean
+    default: true
+  memberApprovalRequired:
+    type: boolean
+    default: false
+  postApprovalRequired:
+    type: boolean
+    default: false
+required:
+  - name

@@ -40,12 +40,12 @@ properties:
     description: If true, the group is visible to all community members. If false, it might be invite-only or hidden.
     default: true
     example: true
-  memberApprovalRequired:
+  memberApproval:
     type: boolean
     description: If true, new members require approval from group admins/moderators to join.
     default: false
     example: false
-  postApprovalRequired:
+  postApproval:
     type: boolean
     description: If true, posts made within the group require approval from group admins/moderators before becoming visible.
     default: false

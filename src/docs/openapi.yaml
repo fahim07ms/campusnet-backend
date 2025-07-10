@@ -398,38 +398,7 @@ components:
                 - role
 
         GroupRequest:
-            type: object
-            properties:
-                name:
-                    type: string
-                    maxLength: 255
-                description:
-                    type: string
-                    format: text
-                    nullable: true
-                rules:
-                    type: string
-                    format: text
-                    nullable: true
-                coverImage:
-                    type: string
-                    format: url
-                    nullable: true
-                logo:
-                    type: string
-                    format: url
-                    nullable: true
-                isPublic:
-                    type: boolean
-                    default: true
-                memberApprovalRequired:
-                    type: boolean
-                    default: false
-                postApprovalRequired:
-                    type: boolean
-                    default: false
-            required:
-                - name
+            $ref: "./schemas/requests/GroupRequest.yaml"
 
         GroupMemberRoleRequest:
             type: object
@@ -438,6 +407,29 @@ components:
                     $ref: "#/components/schemas/CommunityRoleEnum" # Using community role
             required:
                 - role
+
+        GroupMemberRequest:
+            type: object
+            description: Represents a user's request to join a group.
+            properties:
+                id:
+                    type: string
+                    format: uuid
+                    readOnly: true
+                groupId:
+                    type: string
+                    format: uuid
+                    readOnly: true
+                userId:
+                    type: string
+                    format: uuid
+                    readOnly: true
+                role:
+                    $ref: "#/components/schemas/CommunityRoleEnum"
+                createdAt:
+                    type: string
+                    format: date-time
+                    readOnly: true
 
         PostRequest:
             type: object
@@ -762,6 +754,62 @@ components:
                     properties:
                         community:
                             $ref: "#/components/schemas/Community"
+
+        PaginatedGroupResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                data:
+                    type: object
+                    properties:
+                        groups:
+                            type: array
+                            items:
+                                $ref: "#/components/schemas/Group"
+                meta:
+                    $ref: "schemas/PaginationMetadata.yaml"
+
+        SingleGroupResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                data:
+                    type: object
+                    properties:
+                        group:
+                            $ref: "#/components/schemas/Group"
+
+        PaginatedGroupMemberResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                data:
+                    type: object
+                    properties:
+                        members:
+                            type: array
+                            items:
+                                $ref: "#/components/schemas/GroupMember"
+                meta:
+                    $ref: "schemas/PaginationMetadata.yaml"
+
+        PaginatedGroupMemberRequestsResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                data:
+                    type: object
+                    properties:
+                        requests:
+                            type: array
+                            items:
+                                $ref: "#/components/schemas/GroupMemberRequest"
+                meta:
+                    $ref: "schemas/PaginationMetadata.yaml"
 
         SinglePostResponse:
             type: object
@@ -1861,32 +1909,29 @@ paths:
         get:
             tags:
                 - Groups
-            summary: Get all groups within a specific community
+            summary: Get all groups in a community
             parameters:
                 - $ref: "#/components/parameters/pageParam"
                 - $ref: "#/components/parameters/limitParam"
-                - $ref: "#/components/parameters/searchQueryParam"
-                - name: isPublic
-                  in: query
-                  schema:
-                      type: boolean
+            security:
+                - bearerAuth: [ ]
             responses:
                 "200":
-                    description: A list of groups.
+                    description: A paginated list of groups for the specified community.
                     content:
                         application/json:
                             schema:
-                                type: array # Add PaginatedGroupsResponse
-                                items:
-                                    $ref: "#/components/schemas/Group"
+                                $ref: "#/components/schemas/PaginatedGroupResponse"
                 "404":
-                    $ref: "#/components/responses/NotFoundError" # Community not found
+                    $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         post:
             tags:
                 - Groups
-            summary: Create a new group within a community
+            summary: Create a new group in a community
             security:
-                - bearerAuth: []
+                - bearerAuth: [ ]
             requestBody:
                 required: true
                 content:
@@ -1895,19 +1940,41 @@ paths:
                             $ref: "#/components/schemas/GroupRequest"
             responses:
                 "201":
-                    description: Group created.
+                    description: Group created successfully.
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Group"
+                                $ref: "#/components/schemas/SingleGroupResponse"
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
-                "403":
-                    $ref: "#/components/responses/ForbiddenError" # Not a member of community
                 "404":
-                    $ref: "#/components/responses/NotFoundError" # Community not found
+                    $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
+
+    /groups:
+        get:
+            tags:
+                - Groups
+            summary: Get all groups
+            description: Retrieves a paginated list of all groups across all communities.
+            parameters:
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+            security:
+                - bearerAuth: [ ]
+            responses:
+                "200":
+                    description: A paginated list of groups.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PaginatedGroupResponse"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
+
 
     /groups/{groupId}:
         parameters:
@@ -1915,35 +1982,39 @@ paths:
         get:
             tags:
                 - Groups
-            summary: Get details of a specific group
+            summary: Get a specific group by ID
+            security:
+                - bearerAuth: [ ]
             responses:
                 "200":
-                    description: Group details.
+                    description: Successfully retrieved group details.
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Group"
+                                $ref: "#/components/schemas/SingleGroupResponse"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         put:
             tags:
                 - Groups
-            summary: Update a group's details (Group Admin/Moderator)
+            summary: Update a group
             security:
-                - bearerAuth: []
+                - bearerAuth: [ ]
             requestBody:
                 required: true
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/GroupRequest" # Can be partial
+                            $ref: "#/components/schemas/GroupRequest"
             responses:
                 "200":
-                    description: Group updated.
+                    description: Group updated successfully.
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/Group"
+                                $ref: "#/components/schemas/SingleGroupResponse"
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
@@ -1952,41 +2023,25 @@ paths:
                     $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         delete:
             tags:
                 - Groups
-            summary: Delete a group (Group Admin)
+            summary: Delete a group
             security:
-                - bearerAuth: []
+                - bearerAuth: [ ]
             responses:
                 "204":
-                    description: Group deleted.
+                    description: Group deleted successfully.
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "403":
                     $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
-
-    /groups: # For discovery of public groups
-        get:
-            tags:
-                - Groups
-            summary: Get all public groups across all communities
-            parameters:
-                - $ref: "#/components/parameters/pageParam"
-                - $ref: "#/components/parameters/limitParam"
-                - $ref: "#/components/parameters/searchQueryParam"
-                - $ref: "#/components/parameters/tagQueryParam"
-            responses:
-                "200":
-                    description: A list of public groups.
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/Group"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /groups/{groupId}/members:
         parameters:
@@ -1994,53 +2049,24 @@ paths:
         get:
             tags:
                 - Groups
-            summary: Get a list of members in a group
+            summary: Get all members of a group
             parameters:
                 - $ref: "#/components/parameters/pageParam"
                 - $ref: "#/components/parameters/limitParam"
-                - $ref: "#/components/parameters/searchQueryParam"
-                - name: role
-                  in: query
-                  schema:
-                      $ref: "#/components/schemas/CommunityRoleEnum"
+            security:
+                - bearerAuth: [ ]
             responses:
                 "200":
-                    description: A list of group members.
+                    description: A paginated list of group members.
                     content:
                         application/json:
                             schema:
-                                type: array # Add PaginatedGroupMembersResponse
-                                items:
-                                    $ref: "#/components/schemas/GroupMember"
+                                $ref: "#/components/schemas/PaginatedGroupMemberResponse"
+
                 "404":
                     $ref: "#/components/responses/NotFoundError"
-        post:
-            tags:
-                - Groups
-            summary: Join a group (or request to join)
-            security:
-                - bearerAuth: []
-            responses:
-                "201":
-                    description: Successfully joined group or request sent.
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: "#/components/schemas/GroupMember"
-                                    - type: object
-                                      properties:
-                                          message:
-                                              type: string
-                                              example: "Request sent for approval"
-                "400":
-                    $ref: "#/components/responses/BadRequestError" # Already member, not eligible
-                "401":
-                    $ref: "#/components/responses/UnauthorizedError"
-                "403":
-                    $ref: "#/components/responses/ForbiddenError" # Not member of parent community
-                "404":
-                    $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /groups/{groupId}/members/{userId}:
         parameters:
@@ -2049,9 +2075,9 @@ paths:
         put:
             tags:
                 - Groups
-            summary: Update a member's role in a group (Group Admin)
+            summary: Update a group member's role
             security:
-                - bearerAuth: []
+                - bearerAuth: [ ]
             requestBody:
                 required: true
                 content:
@@ -2060,11 +2086,13 @@ paths:
                             $ref: "#/components/schemas/GroupMemberRoleRequest"
             responses:
                 "200":
-                    description: Member role updated.
+                    description: Member role updated successfully.
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/GroupMember"
+                                type: object
+                                properties:
+                                    message: string
                 "400":
                     $ref: "#/components/responses/BadRequestError"
                 "401":
@@ -2073,21 +2101,77 @@ paths:
                     $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
         delete:
             tags:
                 - Groups
-            summary: Remove a member from a group (Group Admin or self-leave)
+            summary: Remove a member from a group
             security:
-                - bearerAuth: []
+                - bearerAuth: [ ]
             responses:
                 "204":
-                    description: Member removed.
+                    description: Member removed successfully.
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "403":
                     $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
+
+    /groups/{groupId}/join:
+        parameters:
+            - $ref: "#/components/parameters/groupIdParam"
+        post:
+            tags:
+                - Groups
+            summary: Join a group
+            security:
+                - bearerAuth: [ ]
+            responses:
+                "200":
+                    description: Successfully joined the group or request sent.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message: string
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+                "409":
+                    $ref: "#/components/responses/ConflictError" # e.g., Already a member or request pending
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
+
+    /groups/{groupId}/leave:
+        parameters:
+            - $ref: "#/components/parameters/groupIdParam"
+        post:
+            tags:
+                - Groups
+            summary: Leave a group
+            security:
+                - bearerAuth: [ ]
+            responses:
+                "200":
+                    description: Successfully left the group.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message: string
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /groups/{groupId}/member-requests:
         parameters:
@@ -2095,24 +2179,27 @@ paths:
         get:
             tags:
                 - Groups
-            summary: List pending membership requests (Group Admin/Mod)
+            summary: Get membership requests for a group
             security:
-                - bearerAuth: []
+                - bearerAuth: [ ]
+            parameters:
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
             responses:
                 "200":
-                    description: List of pending requests.
+                    description: A paginated list of membership requests.
                     content:
                         application/json:
                             schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/GroupMember" # Members with 'pending' status or a dedicated request schema
+                                $ref: "#/components/schemas/PaginatedGroupMemberRequestsResponse"
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "403":
                     $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /groups/{groupId}/member-requests/{userId}/approve:
         parameters:
@@ -2123,20 +2210,24 @@ paths:
                 - Groups
             summary: Approve a membership request
             security:
-                - bearerAuth: []
+                - bearerAuth: [ ]
             responses:
                 "200":
-                    description: Membership request approved.
+                    description: Request approved successfully.
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/GroupMember"
+                                type: object
+                                properties:
+                                    message: string
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "403":
                     $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     /groups/{groupId}/member-requests/{userId}/reject:
         parameters:
@@ -2147,20 +2238,24 @@ paths:
                 - Groups
             summary: Reject a membership request
             security:
-                - bearerAuth: []
+                - bearerAuth: [ ]
             responses:
                 "200":
-                    description: Membership request rejected.
+                    description: Request rejected successfully.
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/GroupMember" # Or a success message
+                                type: object
+                                properties:
+                                    message: string
                 "401":
                     $ref: "#/components/responses/UnauthorizedError"
                 "403":
                     $ref: "#/components/responses/ForbiddenError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+                "500":
+                    $ref: "#/components/responses/InternalServerError"
 
     # --- Posts ---
     /posts:

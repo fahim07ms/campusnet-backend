@@ -84,7 +84,7 @@ const getComments = async (req, res) => {
     }
 }
 
-const createComment = async (req, res, next) => {
+const createComment = async (req, res) => {
     const { postId } = req.params;
     const { eventId } = req.params;
     const { parentId } = req.body;
@@ -168,7 +168,7 @@ const updateComment = async (req, res) => {
     }
 }
 
-const deleteComment = async (req, res, next) => {
+const deleteComment = async (req, res) => {
     const { commentId } = req.params;
     const authorId = req.userId;
 

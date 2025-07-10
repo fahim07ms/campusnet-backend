@@ -1,8 +1,10 @@
 type: object
 description: Represents a user's membership in a group.
 properties:
-  user:
-    $ref: "./User.yaml"
+  userId:
+    type: string
+    format: uuid
+    example: "423e4567-e89b-12d3-a456-426614174000"
   groupId:
     type: string
     format: uuid
@@ -15,6 +17,6 @@ properties:
     readOnly: true
     example: "2023-09-05T10:00:00Z"
 required:
-  - user
+  - userId
   - groupId
   - role
