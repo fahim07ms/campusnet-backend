@@ -70,8 +70,8 @@ const getComments = async (req, res) => {
                 comments: [
                     ...buildCommentTree(comments.comments)
                 ],
-                meta: comments.meta,
             },
+            meta: comments.meta,
         });
     } catch (error) {
         console.error(error);

@@ -14,6 +14,10 @@ const {
     removeCommunityMember,
 } = require("../controllers/communitiesController");
 const {authMiddleware} = require("../middlewares/authMiddleware");
+const {
+    getAllGroups,
+    createGroup
+} = require("../controllers/groupsController");
 
 router.get("/", getCommunities);
 
@@ -34,6 +38,9 @@ router.get("/:id/members/:userId", authMiddleware, getCommunityMemberDetails);
 router.put("/:id/members/:userId", authMiddleware, updateCommunityMemberDetails);
 
 router.delete("/:id/members/:userId", authMiddleware, removeCommunityMember);
+
+router.get("/:communityId/groups", authMiddleware, getAllGroups);
+router.post("/:communityId/groups", authMiddleware, createGroup);
 
 
 module.exports = {

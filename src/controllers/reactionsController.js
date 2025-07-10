@@ -1,11 +1,24 @@
 const pool = require("../config/db");
 const ReactionsModel = require("../models/reactionsModel");
 const customError = require("../utils/errors");
+const { validate: isValidUUID } = require('uuid');
 
 const addPostReaction = async (req, res, next) => {
     const { postId } = req.params;
     const { reactionType } = req.body;
     const userId = req.userId;
+
+    if (!reactionType) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid request body. reactionType is required!"
+        }))
+    }
+
+    if (!postId || !isValidUUID(postId)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid postId"
+        }))
+    }
 
     // Make object for passing to model
     const reactionData = {
@@ -45,6 +58,18 @@ const addCommentReaction = async (req, res, next) => {
     const { reactionType } = req.body;
     const userId = req.userId;
 
+    if (!reactionType) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid request body. reactionType is required!"
+        }))
+    }
+
+    if (!commentId || !isValidUUID(commentId)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid commentId"
+        }))
+    }
+
     // Make data object for passing to model
     const reactionData = {
         commentId,
@@ -82,6 +107,18 @@ const deletePostReaction = async (req, res, next) => {
     const { postId, reactionId } = req.params;
     const userId = req.userId;
 
+    if (!postId || !isValidUUID(postId)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid postId"
+        }))
+    }
+
+    if (!reactionId && !isValidUUID(reactionId)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid reactionId"
+        }))
+    }
+
     try {
         // Try removing reaction
         // If no reaction found or post found give 404 error
@@ -110,6 +147,18 @@ const deleteCommentReaction = async (req, res, next) => {
     const { commentId, reactionId } = req.params;
     const userId = req.userId;
 
+    if (!commentId || !isValidUUID(commentId)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid commentId"
+        }))
+    }
+
+    if (!reactionId && !isValidUUID(reactionId)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid reactionId"
+        }))
+    }
+
     try {
         // Try removing reaction
         // If no reaction found or post found give 404 error
@@ -137,6 +186,12 @@ const deleteCommentReaction = async (req, res, next) => {
 const getPostReactions = async (req, res, next) => {
     const { postId } = req.params;
 
+    if (!postId || !isValidUUID(postId)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid postId"
+        }))
+    }
+
     try {
         const result = await ReactionsModel.getPostReactions(postId);
 
@@ -159,6 +214,12 @@ const getPostReactions = async (req, res, next) => {
 
 const getCommentReactions = async (req, res, next) => {
     const { commentId } = req.params;
+
+    if (!commentId || !isValidUUID(commentId)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid commentId"
+        }))
+    }
 
     try {
         const result = await ReactionsModel.getCommentReaction(commentId);

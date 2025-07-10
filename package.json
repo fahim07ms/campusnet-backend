@@ -26,6 +26,7 @@
         "nodemailer": "^7.0.3",
         "pg": "^8.16.0",
         "swagger-ui-express": "^5.0.1",
+        "uuid": "^11.1.0",
         "yaml": "^2.8.0",
         "yamljs": "^0.3.0"
     },
