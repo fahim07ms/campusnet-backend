@@ -8,6 +8,7 @@ const {
     updatePost,
     deletePost,
     approvePost,
+    unapprovePost,
     togglePinPost,
     toggleFeaturePost,
 } = require('../controllers/postsControllers');
@@ -27,6 +28,7 @@ router.delete('/:postId', authMiddleware, deletePost);
 router.post('/:postId/approve', authMiddleware, isPostModerator, approvePost);
 router.post('/:postId/pin', authMiddleware, isPostModerator, togglePinPost);
 router.post('/:postId/feature', authMiddleware, isPostModerator, toggleFeaturePost);
+router.post('/:postId/unapprove', authMiddleware, isPostModerator, unapprovePost);
 
 // Comments
 router.get("/:postId/comments", authMiddleware, getComments);

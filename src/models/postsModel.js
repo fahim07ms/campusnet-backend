@@ -1,14 +1,14 @@
 const CustomError = require("../utils/errors");
-const {pool} = require("../config/db");
+const pool = require("../config/db");
 /**
  * Get all posts with pagination
  */
 const getAllPosts = async (client, { page = 1, limit = 10, authorId = null, communityId = null, groupId = null, status = "approved" }) => {
     const offset = (page - 1) * limit;
-    const params = [limit, offset];
-    let paramIndex = 3;
-    let conditions = ["status = $3"];
-    params.push(status);
+    const params = [status];
+    let paramIndex = 1;
+    let conditions = ["status = $1"];
+    paramIndex++;
 
     // Add filters if provided
     if (communityId) {
@@ -26,6 +26,12 @@ const getAllPosts = async (client, { page = 1, limit = 10, authorId = null, comm
         conditions.push(`author_id = $${paramIndex++}`);
         params.push(authorId);
     }
+
+    params.push(limit);
+    paramIndex++;
+    params.push(offset);
+    paramIndex++;
+
 
     const query = {
         text: `
@@ -49,18 +55,20 @@ const getAllPosts = async (client, { page = 1, limit = 10, authorId = null, comm
                 CASE WHEN p.is_pinned THEN 0 ELSE 1 END,
                 CASE WHEN p.is_featured THEN 0 ELSE 1 END,
                 p.created_at DESC
-            LIMIT $1 OFFSET $2
+            LIMIT $${paramIndex - 2} OFFSET $${paramIndex - 1}
         `,
         values: [...params, authorId || null]
     };
 
+
+    params.splice(-2);
     const countQuery = {
         text: `
             SELECT COUNT(*) 
             FROM posts 
             WHERE ${conditions.join(' AND ')}
         `,
-        values: params.slice(2) // Remove limit and offset
+        values: params // Remove limit and offset
     };
 
     try {
@@ -277,6 +285,35 @@ const approvePost = async (client, postId, moderatorId) => {
 };
 
 /**
+ * Unapprove a post
+ */
+const unapprovePost = async (client, postId, moderatorId) => {
+    const query = {
+        text: `
+            UPDATE posts
+            SET 
+                status = 'pending',
+                approved_by = null,
+                approved_at = null
+            WHERE id = $1
+            RETURNING *
+        `,
+        values: [postId]
+    };
+
+    try {
+        const result = await client.query(query);
+        if (result.rows.length === 0) {
+            throw CustomError.notFound("Post not found");
+        }
+        return result.rows[0];
+    } catch (err) {
+        console.error(`Error approving post ${postId}:`, err);
+        throw CustomError.internalServerError("Failed to unapprove post");
+    }
+};
+
+/**
  * Delete a post
  */
 const deletePost = async (client, postId, userId) => {
@@ -316,12 +353,10 @@ const togglePinPost = async (postId) => {
     try {
         // First get current pin status
         const checkQuery = {
-            text: 'SELECT is_pinned FROM posts WHERE id = $1',
+            text: 'SELECT is_pinned FROM posts WHERE id = $1 AND status = \'approved\'',
             values: [postId]
         };
-
         const checkResult = await client.query(checkQuery);
-
         if (checkResult.rows.length === 0) {
             return null;
         }
@@ -361,16 +396,13 @@ const toggleFeaturePost = async (postId) => {
     try {
         // First get current feature status
         const checkQuery = {
-            text: 'SELECT is_featured FROM posts WHERE id = $1',
+            text: 'SELECT is_featured FROM posts WHERE id = $1 AND status = \'approved\'',
             values: [postId]
         };
-
         const checkResult = await client.query(checkQuery);
-
         if (checkResult.rows.length === 0) {
             return null;
         }
-
         const currentFeatureStatus = checkResult.rows[0].is_featured;
 
         // Toggle feature status
@@ -386,6 +418,7 @@ const toggleFeaturePost = async (postId) => {
 
         const result = await client.query(query);
 
+        //
         return {
             post: result.rows[0],
             action: currentFeatureStatus ? 'unfeatured' : 'featured'
@@ -530,6 +563,7 @@ module.exports = {
     updatePost,
     deletePost,
     approvePost,
+    unapprovePost,
     togglePinPost,
     toggleFeaturePost,
     savePost,

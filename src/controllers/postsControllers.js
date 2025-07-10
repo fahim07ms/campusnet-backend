@@ -21,12 +21,12 @@ const getPosts = async (req, res, next) => {
         }));
     }
 
-    // Validate that either communityId or groupId is provided
-    if (!communityId && !groupId) {
-        return res.status(400).json(CustomError.badRequest({
-            message: "Either communityId or groupId is required.",
-        }))
-    }
+    // // Validate that either communityId or groupId is provided
+    // if (!communityId && !groupId) {
+    //     return res.status(400).json(CustomError.badRequest({
+    //         message: "Either communityId or groupId is required.",
+    //     }))
+    // }
 
     let client;
     try {
@@ -51,6 +51,9 @@ const getPosts = async (req, res, next) => {
             console.error("Unexpected error in getPosts controller:", error);
             return res.status(500).json(CustomError.internalServerError({
                 message: "An unexpected error occurred while fetching posts.",
+                details: {
+                    error: error.message
+                }
             }))
     } finally {
         if (client) {
@@ -310,6 +313,50 @@ const approvePost = async (req, res, next) => {
 };
 
 /**
+ * Unapprove a post
+ */
+const unapprovePost = async (req, res) => {
+    const { postId } = req.params;
+    const moderatorId = req.userId;
+
+    let client;
+    try {
+        client = await pool.connect();
+
+        // Start transaction
+        await client.query('BEGIN');
+
+        const unapprovedPost = await PostsModel.unapprovePost(client, postId, moderatorId);
+
+        // Commit transaction
+        await client.query('COMMIT');
+
+        res.status(200).json({
+            message: "Post unapproved successfully.",
+            data: {
+                post: unapprovedPost,
+            },
+        });
+    } catch (error) {
+        // Rollback transaction on error
+        if (client) {
+            await client.query('ROLLBACK');
+        }
+        console.error(`Unexpected error in unapprovePost controller for post ${postId}:`, error);
+        return res.status(500).json(CustomError.internalServerError({
+            message: "An unexpected error occurred while unapproving the post.",
+            details: {
+                error: error.message
+            }
+        }))
+    } finally {
+        if (client) {
+            client.release();
+        }
+    }
+}
+
+/**
  * Save a post for the current user
  */
 const savePost = async (req, res, next) => {
@@ -412,6 +459,9 @@ const getSavedPosts = async (req, res, next) => {
         console.error("Unexpected error in getSavedPosts controller:", error);
         return res.status(500).json(CustomError.internalServerError({
             message: "An unexpected error occurred while retrieving saved posts.",
+            details: {
+                error: error.message
+            }
         }));
     } finally {
         if (client) {
@@ -428,10 +478,10 @@ const togglePinPost = async (req, res, next) => {
     try {
         const { postId } = req.params;
 
-        const result = await postsModel.togglePinPost(postId);
+        const result = await PostsModel.togglePinPost(postId);
         if (!result) {
             return res.status(404).json(CustomError.notFound({
-                message: "No post found with the given ID."
+                message: "No post found with the given ID or post maybe unapproved yet."
             }))
         }
 
@@ -442,6 +492,9 @@ const togglePinPost = async (req, res, next) => {
     } catch (err) {
         return res.status(500).json(CustomError.internalServerError({
             message: "An unexpected error occurred while pinning the post.",
+            details: {
+                error: err.message
+            }
         }))
     }
 };
@@ -453,10 +506,10 @@ const toggleFeaturePost = async (req, res, next) => {
     try {
         const { postId } = req.params;
 
-        const result = await postsModel.toggleFeaturePost(postId);
+        const result = await PostsModel.toggleFeaturePost(postId);
         if (!result) {
             return res.status(404).json(CustomError.notFound({
-                message: "No post found with the given ID."
+                message: "No post found with the given ID or post maybe unapproved yet."
             }))
         }
 
@@ -467,6 +520,9 @@ const toggleFeaturePost = async (req, res, next) => {
     } catch (err) {
         return res.status(500).json(CustomError.internalServerError({
             message: "An unexpected error occurred while featuring the post.",
+            details: {
+                error: err.message
+            }
         }))
     }
 };
@@ -479,6 +535,7 @@ module.exports = {
     updatePost,
     deletePost,
     approvePost,
+    unapprovePost,
     togglePinPost,
     toggleFeaturePost,
     savePost,
