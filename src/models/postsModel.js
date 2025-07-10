@@ -122,7 +122,7 @@ const getPostById = async (client, postId, userId = null) => {
 
     try {
         const result = await client.query(query);
-        if (!result) return null;
+        if (result.rows.length === 0) return null;
 
         // Increment view count
         await client.query(

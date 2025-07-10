@@ -7,7 +7,7 @@ const {updateComment, deleteComment, getComments, createComment} = require("../c
 
 router.get("/:commentId/comments", authMiddleware, getComments);
 router.post("/:commentId", authMiddleware, createComment);
-router.put('/:commentsId', authMiddleware, updateComment);
+router.put('/:commentId', authMiddleware, updateComment);
 router.delete("/:commentId", authMiddleware, deleteComment);
 
 module.exports = {
