@@ -15,6 +15,11 @@ const {
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const { isPostModerator } = require('../middlewares/permissions');
 const {getComments, createComment} = require("../controllers/commentsController");
+const {
+    getPostReactions,
+    addPostReaction,
+    deletePostReaction
+} = require("../controllers/reactionsController");
 
 
 router.get('/', authMiddleware, getPosts);
@@ -33,6 +38,12 @@ router.post('/:postId/unapprove', authMiddleware, isPostModerator, unapprovePost
 // Comments
 router.get("/:postId/comments", authMiddleware, getComments);
 router.post("/:postId/comments", authMiddleware, createComment);
+
+// Reactions
+router.get("/:postId/reactions", authMiddleware, getPostReactions);
+router.post("/:postId/reactions", authMiddleware, addPostReaction);
+router.delete("/:postId/reactions/:reactionId", authMiddleware, deletePostReaction);
+
 
 
 module.exports = {

@@ -27,7 +27,6 @@ const { universityRoutes } = require("./routes/universityRoutes");
 const { communitiesRoutes } = require("./routes/communitiesRoutes");
 const { postsRoutes } = require("./routes/postsRoutes");
 const { commentsRoutes } = require("./routes/commentsRoutes");
-const { reactionsRoutes } = require("./routes/reactionsRoutes");
 
 // Initialize express
 const app = express();
@@ -76,7 +75,6 @@ app.use("/api/v1/universities", universityRoutes);
 app.use("/api/v1/communities", communitiesRoutes);
 app.use("/api/v1/posts", postsRoutes);
 app.use("/api/v1/comments", commentsRoutes);
-app.use("/api/v1/reactions", reactionsRoutes);
 
 SwaggerParser.bundle(path.join(__dirname, "docs", "openapi.yaml"))
     .then((api) => {

@@ -2662,27 +2662,6 @@ paths:
                     $ref: "#/components/responses/UnauthorizedError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
-        delete: # To remove user's own reaction
-            tags:
-                - Reactions
-            summary: Remove a reaction from a post
-            security:
-                - bearerAuth: []
-            responses:
-                "204":
-                    description: Reaction removed.
-                    content:
-                        application/json:
-                            schema:
-                                type: object
-                                properties:
-                                    message:
-                                        type: string
-                                        example: "Reaction removed"
-                "401":
-                    $ref: "#/components/responses/UnauthorizedError"
-                "404":
-                    $ref: "#/components/responses/NotFoundError" # Post or reaction not found
         get:
             tags:
                 - Reactions
@@ -2703,6 +2682,29 @@ paths:
                                     $ref: "#/components/schemas/AllReactionResponse"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
+
+    /posts/{postId}/reactions/{reactionId}:
+        delete: # To remove user's own reaction
+            tags:
+                - Reactions
+            summary: Remove a reaction from a post
+            security:
+                - bearerAuth: [ ]
+            responses:
+                "204":
+                    description: Reaction removed.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Reaction removed"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError" # Post or reaction not found
 
     /comments/{commentId}/reactions:
         parameters:
@@ -2732,27 +2734,6 @@ paths:
                     $ref: "#/components/responses/UnauthorizedError"
                 "404":
                     $ref: "#/components/responses/NotFoundError"
-        delete: # To remove user's own reaction
-            tags:
-                - Reactions
-            summary: Remove a reaction from a post
-            security:
-                - bearerAuth: [ ]
-            responses:
-                "204":
-                    description: Reaction removed.
-                    content:
-                        application/json:
-                            schema:
-                                type: object
-                                properties:
-                                    message:
-                                        type: string
-                                        example: "Reaction removed"
-                "401":
-                    $ref: "#/components/responses/UnauthorizedError"
-                "404":
-                    $ref: "#/components/responses/NotFoundError" # Post or reaction not found
         get:
             tags:
                 - Reactions
@@ -2774,6 +2755,28 @@ paths:
                 "404":
                     $ref: "#/components/responses/NotFoundError"
 
+    /comments/{commentId}/reactions/{reactionId}:
+        delete: # To remove user's own reaction
+            tags:
+                - Reactions
+            summary: Remove a reaction from a post
+            security:
+                - bearerAuth: [ ]
+            responses:
+                "204":
+                    description: Reaction removed.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Reaction removed"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError" # Post or reaction not found
 
     # /comments/{commentId}/reactions (similar to post reactions)
 
