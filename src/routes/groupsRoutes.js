@@ -5,15 +5,15 @@ const {
     getAllGroups,
     getSpecificGroup,
     updateGroupData,
-    // deleteGroup,
-    // getGroupMembers,
-    // updateMemberRole,
-    // removeGroupMember,
-    // joinGroup,
-    // leaveGroup,
-    // getMemberRequests,
-    // approveMemberRequest,
-    // rejectMemberRequest,
+    deleteGroup,
+    joinGroup,
+    leaveGroup,
+    getAllMemberRequests,
+    approveMemberRequest,
+    rejectMemberRequest,
+    getAllMembers,
+    updateMemberRole,
+    removeMember,
 } = require("../controllers/groupsController");
 const {authMiddleware} = require("../middlewares/authMiddleware");
 const {groupModerator} = require("../middlewares/permissions");
@@ -21,20 +21,20 @@ const {groupModerator} = require("../middlewares/permissions");
 router.get("/", authMiddleware, getAllGroups);
 router.get("/:groupId", authMiddleware, getSpecificGroup);
 router.put("/:groupId", authMiddleware, groupModerator, updateGroupData);
-// router.delete("/:groupId", authMiddleware, groupModerator, deleteGroup);
-//
-// // Group Members
-// router.get("/:groupId/members", authMiddleware, getGroupMembers);
-// router.put("/:groupId/members/:memberId", authMiddleware, updateMemberRole);
-// router.delete("/:groupId/members/:memberId", authMiddleware, removeGroupMember);
-//
-// router.post("/:groupId/join", authMiddleware, joinGroup);
-// router.post("/:groupId/leave", authMiddleware, leaveGroup);
-//
-// // Member Requests
-// router.get("/:groupId/member-requests", authMiddleware, getMemberRequests);
-// router.post("/:groupId/member-requests/:userId/approve", authMiddleware, groupModerator, approveMemberRequest);
-// router.post("/:groupId/member-requests/:userId/reject", authMiddleware, groupModerator, rejectMemberRequest);
+router.delete("/:groupId", authMiddleware, groupModerator, deleteGroup);
+
+// Group Members
+router.get("/:groupId/members", authMiddleware, getAllMembers);
+router.put("/:groupId/members/:userId", authMiddleware, groupModerator, updateMemberRole);
+router.delete("/:groupId/members/:userId", authMiddleware, removeMember);
+
+router.post("/:groupId/join", authMiddleware, joinGroup);
+router.post("/:groupId/leave", authMiddleware, leaveGroup);
+
+// Member Requests
+router.get("/:groupId/member-requests", authMiddleware, groupModerator, getAllMemberRequests);
+router.post("/:groupId/member-requests/:requestId/approve", authMiddleware, groupModerator, approveMemberRequest);
+router.post("/:groupId/member-requests/:requestId/reject", authMiddleware, groupModerator, rejectMemberRequest);
 
 module.exports = {
     groupRoutes: router

@@ -73,13 +73,13 @@ const groupModerator = async (req, res, next) => {
         const result = await client.query(`SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2;`, [groupId, userId]);
         if (result.rows.length === 0) {
             return res.status(404).json(customError.notFound({
-                message: "No user found with this group Id",
+                message: "No user found with the given id in the group",
             }))
         }
 
         // Check if user is moderator or admin or nothing
         // If nothing then show error
-        if (result.rows[0].role !== 'moderator' || result.rows[0].role !== 'admin') {
+        if (result.rows[0].role !== 'moderator' && result.rows[0].role !== 'admin') {
             return res.status(403).json(customError.forbidden({
                 message: "You do not have permission to perform this action",
             }))
