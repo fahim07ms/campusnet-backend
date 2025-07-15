@@ -18,6 +18,10 @@ const {
     getAllGroups,
     createGroup
 } = require("../controllers/groupsController");
+const {
+    getAllEvents,
+    createNewEvent
+} = require("../controllers/eventsController");
 
 router.get("/", getCommunities);
 
@@ -41,6 +45,9 @@ router.delete("/:id/members/:userId", authMiddleware, removeCommunityMember);
 
 router.get("/:communityId/groups", authMiddleware, getAllGroups);
 router.post("/:communityId/groups", authMiddleware, createGroup);
+
+router.get("/:communityId/events", authMiddleware, getAllEvents);
+router.post("/:communityId/events", authMiddleware, createNewEvent);
 
 
 module.exports = {

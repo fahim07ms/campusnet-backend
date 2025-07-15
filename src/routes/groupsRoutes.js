@@ -17,6 +17,7 @@ const {
 } = require("../controllers/groupsController");
 const {authMiddleware} = require("../middlewares/authMiddleware");
 const {groupModerator} = require("../middlewares/permissions");
+const {getAllEvents, createNewEvent} = require("../controllers/eventsController");
 
 router.get("/", authMiddleware, getAllGroups);
 router.get("/:groupId", authMiddleware, getSpecificGroup);
@@ -35,6 +36,10 @@ router.post("/:groupId/leave", authMiddleware, leaveGroup);
 router.get("/:groupId/member-requests", authMiddleware, groupModerator, getAllMemberRequests);
 router.post("/:groupId/member-requests/:requestId/approve", authMiddleware, groupModerator, approveMemberRequest);
 router.post("/:groupId/member-requests/:requestId/reject", authMiddleware, groupModerator, rejectMemberRequest);
+
+// Events
+router.get("/:groupId/events", authMiddleware, getAllEvents);
+router.post("/:groupId/events", authMiddleware, createNewEvent);
 
 module.exports = {
     groupRoutes: router

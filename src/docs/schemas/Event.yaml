@@ -54,7 +54,7 @@ properties:
     description: Indicates if the event is hosted online.
     default: false
     example: false
-  onlineEventUrl:
+  eventLink:
     type: string
     format: uri
     nullable: true

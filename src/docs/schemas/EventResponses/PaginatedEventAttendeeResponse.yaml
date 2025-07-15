@@ -1,0 +1,13 @@
+type: object
+properties:
+  message:
+    type: string
+  data:
+    type: object
+    properties:
+      attendees:
+        type: array
+        items:
+          $ref: "../EventAttendee.yaml"
+  meta:
+    $ref: "../PaginationMetadata.yaml"

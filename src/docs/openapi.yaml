@@ -253,6 +253,8 @@ components:
             $ref: "./schemas/enums/PostStatusEnum.yaml"
         EventStatusEnum:
             $ref: "./schemas/enums/EventStatusEnum.yaml"
+        EventAttendeeStatusEnum:
+            $ref: "./schemas/enums/EventAttendeeStatusEnum.yaml"
         ConnectionStatusEnum:
             $ref: "./schemas/enums/ConnectionStatusEnum.yaml"
         ReactionTypeEnum:
@@ -472,69 +474,10 @@ components:
                 - content
 
         EventRequest:
-            type: object
-            properties:
-                title:
-                    type: string
-                    maxLength: 255
-                description:
-                    type: string
-                    format: text
-                    nullable: true
-                communityId:
-                    type: string
-                    format: uuid
-                    nullable: true
-                groupId:
-                    type: string
-                    format: uuid
-                    nullable: true
-                startDate:
-                    type: string
-                    format: date-time
-                endDate:
-                    type: string
-                    format: date-time
-                    nullable: true
-                location:
-                    type: string
-                    maxLength: 255
-                    nullable: true
-                eventLink:
-                    type: string
-                    format: url
-                    nullable: true
-                venueDetails:
-                    type: string
-                    maxLength: 255
-                    nullable: true
-                maxAttendees:
-                    type: integer
-                    nullable: true
-                isPublic:
-                    type: boolean
-                    default: true
-                coverImage:
-                    type: string
-                    format: url
-                    nullable: true
-                tags: # Array of tag names or tag IDs
-                    type: array
-                    items:
-                        type: string
-                    nullable: true
-            required:
-                - title
-                - startDate
+            $ref: "./schemas/requests/EventRequest.yaml"
 
         EventAttendeeStatusRequest:
-            type: object
-            properties:
-                status:
-                    type: string
-                    enum: [interested, attending]
-            required:
-                - status
+            $ref: "./schemas/requests/EventAttendeeRequest.yaml"
 
         PollOptionRequest:
             type: object
@@ -821,6 +764,16 @@ components:
                     properties:
                         post:
                             $ref: "#/components/schemas/Post"
+
+        # Event Response Schemas
+        SingleEventResponse:
+            $ref: "./schemas/EventResponses/SingleEventResponse.yaml"
+        PaginatedEventsResponse:
+            $ref: "./schemas/EventResponses/PaginatedEventResponse.yaml"
+        SingleEventAttendeeResponse:
+            $ref: "./schemas/EventResponses/SingleEventAttendeeResponse.yaml"
+        PaginatedEventAttendeesResponse:
+            $ref: "./schemas/EventResponses/PaginatedEventAttendeeResponse.yaml"
 
         PaginatedCommentResponse:
             type: object
@@ -2550,11 +2503,301 @@ paths:
                 "404":
                     $ref: "#/components/responses/NotFoundError"
 
-    # --- Events (similar structure to Posts) ---
-    # GET /events, POST /events
-    # GET /events/{eventId}, PUT /events/{eventId}, DELETE /events/{eventId}
-    # POST /events/{eventId}/attendees, GET /events/{eventId}/attendees, DELETE /events/{eventId}/attendees/me
-    # GET /users/me/events
+    # --------------------------------------
+    # Events
+    # --------------------------------------
+    /events:
+        post:
+            tags:
+                - Events
+            summary: Create a new event
+            security:
+                - bearerAuth: [ ]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/EventRequest"
+            responses:
+                "201":
+                    description: Event created successfully.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SingleEventResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequestError"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "403":
+                    $ref: "#/components/responses/ForbiddenError"
+        get:
+            tags:
+                - Events
+            summary: Get a list of events
+            parameters:
+                - name: communityId
+                  in: query
+                  schema:
+                      type: string
+                      format: uuid
+                - name: groupId
+                  in: query
+                  schema:
+                      type: string
+                      format: uuid
+                - name: isPublic
+                  in: query
+                  schema:
+                      type: boolean
+                - name: status
+                  in: query
+                  schema:
+                      $ref: "#/components/schemas/EventStatusEnum"
+                - name: startDate
+                  in: query
+                  schema:
+                      type: string
+                      format: date
+                - name: tag
+                  in: query
+                  schema:
+                      type: string
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+            responses:
+                "200":
+                    description: An array of event objects.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PaginatedEventsResponse"
+
+    /events/{eventId}:
+        parameters:
+            - $ref: "#/components/parameters/eventIdParam"
+        get:
+            tags:
+                - Events
+            summary: Get details of a specific event
+            security:
+                - bearerAuth: [ ]
+            responses:
+                "200":
+                    description: Event object.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SingleEventResponse"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+        put:
+            tags:
+                - Events
+            summary: Update an existing event
+            description: Only the organizer or an admin/moderator can update an event.
+            security:
+                - bearerAuth: [ ]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/EventRequest"
+            responses:
+                "200":
+                    description: Updated event object.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SingleEventResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequestError"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "403":
+                    $ref: "#/components/responses/ForbiddenError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+        delete:
+            tags:
+                - Events
+            summary: Delete an event
+            description: Only the organizer or an admin/moderator can delete an event.
+            security:
+                - bearerAuth: [ ]
+            responses:
+                "204":
+                    description: Event deleted successfully.
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "403":
+                    $ref: "#/components/responses/ForbiddenError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+
+    /events/{eventId}/attendees:
+        parameters:
+            - $ref: "#/components/parameters/eventIdParam"
+        post:
+            tags:
+                - Events
+            summary: Mark user as interested or attending
+            security:
+                - bearerAuth: [ ]
+            requestBody:
+                $ref: "#/components/schemas/EventAttendeeStatusRequest"
+            responses:
+                "201":
+                    description: Status updated successfully.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SingleEventAttendeeResponse"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+                "409":
+                    $ref: "#/components/responses/ConflictError"
+        get:
+            tags:
+                - Events
+            summary: Get a list of attendees for an event
+            security:
+                - bearerAuth: [ ]
+            parameters:
+                - name: status
+                  in: query
+                  schema:
+                      $ref: "#/components/schemas/EventAttendeeStatusEnum"
+                - $ref: "#/components/parameters/pageParam"
+                - $ref: "#/components/parameters/limitParam"
+            responses:
+                "200":
+                    description: An array of event attendee objects.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PaginatedEventAttendeesResponse"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+
+    /events/{eventId}/attendees/me:
+        parameters:
+            - $ref: "#/components/parameters/eventIdParam"
+        delete:
+            tags:
+                - Events
+            summary: Remove user's attendance status
+            security:
+                - bearerAuth: [ ]
+            responses:
+                "204":
+                    description: Attendance status removed successfully.
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+
+    /users/me/events:
+        get:
+            tags:
+                - Events
+            summary: Get events for the current user
+            security:
+                - bearerAuth: [ ]
+            parameters:
+                - name: status
+                  in: query
+                  schema:
+                      $ref: "#/components/schemas/EventAttendeeStatusEnum"
+            responses:
+                "200":
+                    description: An array of event objects.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PaginatedEventsResponse"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+
+    /communities/{communityId}/events:
+        parameters:
+            - $ref: "#/components/parameters/communityIdParam"
+        get:
+            tags:
+                - Events
+            summary: Get events for a specific community
+            responses:
+                "200":
+                    description: An array of event objects.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PaginatedEventsResponse"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+        post:
+            tags:
+                - Events
+            summary: Create an event within a community
+            security:
+                - bearerAuth: [ ]
+            requestBody:
+                $ref: "#/components/schemas/EventRequest"
+            responses:
+                "201":
+                    description: Event created successfully.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SingleEventResponse"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "403":
+                    $ref: "#/components/responses/ForbiddenError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+
+    /groups/{groupId}/events:
+        parameters:
+            - $ref: "#/components/parameters/groupIdParam"
+        get:
+            tags:
+                - Events
+            summary: Get events for a specific group
+            responses:
+                "200":
+                    description: An array of event objects.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PaginatedEventsResponse"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
+        post:
+            tags:
+                - Events
+            summary: Create an event within a group
+            security:
+                - bearerAuth: [ ]
+            requestBody:
+                $ref: "#/components/schemas/EventRequest"
+            responses:
+                "201":
+                    description: Event created successfully.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SingleEventResponse"
+                "401":
+                    $ref: "#/components/responses/UnauthorizedError"
+                "403":
+                    $ref: "#/components/responses/ForbiddenError"
+                "404":
+                    $ref: "#/components/responses/NotFoundError"
 
     # --- Polls (similar structure to Posts) ---
     # GET /polls, POST /polls

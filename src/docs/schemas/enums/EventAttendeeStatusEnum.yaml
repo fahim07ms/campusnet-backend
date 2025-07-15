@@ -1,0 +1,5 @@
+type: string
+enum:
+  - interested
+  - attending
+description: The attendance status of a user for an event.

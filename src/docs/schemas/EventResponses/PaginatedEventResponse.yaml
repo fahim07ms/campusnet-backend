@@ -1,0 +1,13 @@
+type: object
+properties:
+  message:
+    type: string
+  data:
+    type: object
+    properties:
+      events:
+        type: array
+        items:
+          $ref: "../Event.yaml"
+  meta:
+    $ref: "../PaginationMetadata.yaml"

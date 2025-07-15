@@ -115,6 +115,7 @@ const findGroupByName = async (client, name, communityId) => {
 const findGroupById = async (client, groupId) => {
     const query = `SELECT
                             g.id,
+                            g.community_id as "communityId",
                             g.name,
                             g.description,
                             g.rules,
@@ -406,6 +407,13 @@ const rejectJoinRequest = async (client, requestId, rejectorId, reason) => {
     }
 }
 
+const findGroupMemberById = async (client, groupId, memberId) => {
+    const query = `SELECT * FROM group_members WHERE group_id = $1 AND user_id = $2`;
+    const values = [groupId, memberId];
+    const result = await client.query(query, values);
+    return result.rows[0] || null;
+}
+
 module.exports = {
     getALlGroups,
     createGroup,
@@ -421,4 +429,5 @@ module.exports = {
     getGroupJoinRequests,
     approveJoinRequest,
     rejectJoinRequest,
+    findGroupMemberById
 }
