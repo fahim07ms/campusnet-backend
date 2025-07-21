@@ -585,12 +585,12 @@ const refreshToken = async (req, res) => {
     const client = await pool.connect();
 
     try {
+        
         const refreshToken = req.cookies.refreshToken;
-
         // Check if refresh token is available or not
         if (!refreshToken) {
-            return res.status(401).json(
-                customError.unauthorized({
+            return res.status(400).json(
+                customError.badRequest({
                     message: "Refresh token is required",
                 }),
             );
@@ -601,8 +601,8 @@ const refreshToken = async (req, res) => {
         try {
             payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
         } catch (error) {
-            return res.status(401).json(
-                customError.unauthorized({
+            return res.status(400).json(
+                customError.badRequest({
                     message: "Invalid refresh token",
                 }),
             );
@@ -635,33 +635,50 @@ const refreshToken = async (req, res) => {
                 }),
             );
         }
-
-        // Generate new tokens (token rotation)
+        
+        // Check if token is close to expiration (less than 1 day left)
+        const tokenExpiresAt = new Date(refreshTokenData.expires_at);
+        const oneDayFromNow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const shouldRotateToken = tokenExpiresAt < oneDayFromNow;
+        
         const accessToken = generateAccessToken(userId);
-        const newRefreshToken = generateRefreshToken(userId);
-
-        await client.query(`BEGIN`);
-
-        // Invalidate old refresh token
-        await AuthModel.invalidateRefreshToken(client, userId);
-
-        // Store new refresh token
-        const newRefreshTokenHash = hashToken(newRefreshToken);
-        const newRefreshTokenExpiresAt = new Date(
-            Date.now() + 7 * 24 * 60 * 60 * 1000,
-        );
-
-        // Insert new refresh token into the database
-        await AuthModel.insertRefreshToken(
-            client,
-            userId,
-            newRefreshTokenHash,
-            req.ip,
-            req.get("User-Agent"),
-            newRefreshTokenExpiresAt,
-        );
-
-        await client.query("COMMIT");
+        if (shouldRotateToken) {
+            // Generate new tokens (token rotation)
+            const newRefreshToken = generateRefreshToken(userId);
+            
+            await client.query(`BEGIN`);
+            
+            // Invalidate old refresh token
+            await AuthModel.invalidateRefreshToken(client, userId, newRefreshToken);
+            // Store new refresh token
+            const newRefreshTokenHash = hashToken(newRefreshToken);
+            const newRefreshTokenExpiresAt = new Date(
+                Date.now() + 7 * 24 * 60 * 60 * 1000,
+            );
+            
+            // Insert new refresh token into the database
+            await AuthModel.insertRefreshToken(
+                client,
+                userId,
+                newRefreshTokenHash,
+                req.ip,
+                req.get("User-Agent"),
+                newRefreshTokenExpiresAt,
+            );
+            
+            await client.query("COMMIT");
+            
+            // Set new refresh token cookie
+            res.cookie("refreshToken", newRefreshToken, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "Strict",
+                expires: newRefreshTokenExpiresAt,
+            });
+        } else {
+            await AuthModel.updateRefreshTokenLastUsed(client, refreshTokenHash);
+        }
+        
 
         res.status(200).json({
             message: "Token refreshed successfully",

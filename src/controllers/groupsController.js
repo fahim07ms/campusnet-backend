@@ -67,6 +67,47 @@ const getAllGroups = async (req, res) => {
 }
 
 /**
+ * Controller for getting all groups related to the specific user
+ */
+const getAllUserGroups = async (req, res) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const userId = req.userId;
+    
+    // Check if page and limit is valid or not
+    if (page < 1 || limit < 1) {
+        return res.status(400).json(customError.badRequest({
+            message: "Page and limit must be positive integers.",
+        }))
+    }
+    
+    let client;
+    try {
+        client = await pool.connect();
+        
+        const result = await GroupsModel.getAllGroupsForUser(client, userId, page, limit);
+        
+        return res.status(200).json({
+            message: "Successfully retrieved groups.",
+            data: {
+                groups: result.groups,
+            },
+            meta: result.meta,
+        });
+    } catch (error) {
+        console.error("Error in getAllUserGroups controller:", error);
+        return res.status(500).json(customError.internalServerError({
+            message: "Internal server error",
+            details: {
+                error: error.message,
+            }
+        }))
+    } finally {
+        client.release();
+    }
+}
+
+/**
  * Controller for creating a new group
  */
 const createGroup = async (req, res) => {
@@ -707,6 +748,7 @@ const rejectMemberRequest = async (req, res) => {
 
 module.exports = {
     getAllGroups,
+    getAllUserGroups,
     createGroup,
     getSpecificGroup,
     updateGroupData,

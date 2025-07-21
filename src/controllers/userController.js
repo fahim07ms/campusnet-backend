@@ -97,7 +97,7 @@ const getMe = async (req, res, next) => {
     let client;
     try {
         client = await pool.connect();
-        const user = await UserModel.getUserById(client, userId);
+        const user = await UserModel.getUserProfile(client, userId);
 
         if (!user) {
             return next(CustomError.notFound("User not found."));

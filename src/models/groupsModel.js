@@ -41,6 +41,31 @@ const getALlGroups = async (client, page, limit, communityId) => {
     }
 }
 
+const getAllGroupsForUser = async (client, userId, page, limit) => {
+    const offset = (page - 1) * limit;
+    const query = `SELECT * FROM groups WHERE id IN (SELECT group_id FROM group_members WHERE user_id = $1) LIMIT $2 OFFSET $3`;
+    const values = [userId, limit, offset];
+    
+    const countQuery = `SELECT COUNT(*) FROM groups WHERE id IN (SELECT group_id FROM group_members WHERE user_id = $1)`;
+    
+    const groupsResult = await client.query(query, values);
+    const countResult = await client.query(countQuery, [values[0]]);
+    
+    const totalGroups = parseInt(countResult.rows[0].count, 10);
+    const totalPages = Math.ceil(totalGroups / limit);
+    
+    return {
+        groups: groupsResult.rows,
+        meta: {
+            totalItems: totalGroups,
+            itemsPerPage: limit,
+            itemCount: groupsResult.rows.length,
+            currentPage: page,
+            totalPages: totalPages,
+        }
+    }
+}
+
 const createGroup = async (client, groupData) => {
     const {
         name,
@@ -416,6 +441,7 @@ const findGroupMemberById = async (client, groupId, memberId) => {
 
 module.exports = {
     getALlGroups,
+    getAllGroupsForUser,
     createGroup,
     findGroupByName,
     findGroupById,

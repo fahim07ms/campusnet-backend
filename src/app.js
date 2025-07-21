@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 const rateLimit = require("express-rate-limit");
+const multer = require("multer");
 dotenv.config();
 
 // Swagger Documentation UI Setup
@@ -20,6 +21,15 @@ const path = require("path");
 //     legacyHeaders: false,
 // });
 
+// // Multer file storage configuration
+// const UPLOAD_FOLDER = './'
+//
+// const storage = multer.memoryStorage();
+//
+// // Initialize multer with storage configuration
+// const upload = multer({ storage });
+
+
 // Import routes from routes folder
 const { authRoutes } = require("./routes/authRoutes");
 const { userRoutes } = require("./routes/userRoutes");
@@ -29,6 +39,7 @@ const { postsRoutes } = require("./routes/postsRoutes");
 const { commentsRoutes } = require("./routes/commentsRoutes");
 const { groupRoutes } = require("./routes/groupsRoutes");
 const { eventsRoutes } = require("./routes/eventsRoutes");
+const { imageUploadRoute } = require("./routes/imageUploadRoute");
 
 // Initialize express
 const app = express();
@@ -79,6 +90,7 @@ app.use("/api/v1/posts", postsRoutes);
 app.use("/api/v1/comments", commentsRoutes);
 app.use("/api/v1/groups", groupRoutes);
 app.use("/api/v1/events", eventsRoutes);
+app.use("/api/v1/upload", imageUploadRoute);
 
 SwaggerParser.bundle(path.join(__dirname, "docs", "openapi.yaml"))
     .then((api) => {

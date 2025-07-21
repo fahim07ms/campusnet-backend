@@ -78,37 +78,45 @@ export const updateUserIsActive = async (client, userId, is_active) => {
 
 // Get base user data from id
 export const userDataFromId = async (client, userId) => {
-    const query =
-        "SELECT u.id as user_id, u.email, u.username, u.role, u.is_active, u.is_verified, u.last_login, u.created_at, u.updated_at, univ.name, univ.logo_url, " +
-        "up.first_name, up.last_name, up.bio, up.profile_picture, up.cover_photo, up.profile_visibility_public, up.connection_visibility_public, up.interests " +
-        "FROM users u LEFT JOIN user_profiles up ON u.id = up.user_id " +
-        "LEFT JOIN universities univ ON u.university_id = univ.id " +
-        "WHERE u.id = $1";
+    const query =`
+        SELECT
+            u.id AS "userId",
+            u.email,
+            u.username,
+            u.role,
+            u.is_verified AS "isVerified",
+            u.is_active AS "isActive",
+            u.last_login AS "lastLogin",
+            u.created_at AS "userCreatedAt",
+            u.updated_at AS "userUpdatedAt",
+            up.id AS "profileId",
+            up.first_name AS "firstName",
+            up.last_name AS "lastName",
+            up.profile_picture AS "profilePicture",
+            up.cover_photo AS "coverPhoto",
+            up.bio,
+            up.birth_date AS "birthDate",
+            up.phone,
+            up.student_id AS "studentId",
+            up.graduation_year ,
+            up.department,
+            up.interests,
+            up.address,
+            up.profile_visibility_public AS "profileVisibilityPublic",
+            up.connection_visibility_public AS "connectionVisibilityPublic",
+            up.created_at AS "profileCreatedAt",
+            up.updated_at AS "profileUpdatedAt",
+            un.id AS "universityId",
+            un.name AS "universityName",
+            un.logo_url AS "universityLogoUrl",
+            un.country
+        FROM users u
+        LEFT JOIN user_profiles up ON u.id = up.user_id
+        LEFT JOIN universities un ON u.university_id = un.id
+        WHERE u.id = $1
+    `;
     const result = await client.query(query, [userId]);
-    const data = result.rows[0];
-    const user = {
-        id: data.id,
-        email: data.email,
-        username: data.username,
-        role: data.role,
-        is_active: data.is_active,
-        is_verified: data.is_verified,
-        last_login: data.last_login,
-        createAt: data.createAt,
-        updatedAt: data.updatedAt,
-        university_name: data.university_name,
-        university_logo: data["logo_url"],
-        userProfile: {
-            first_name: data.first_name,
-            last_name: data.last_name,
-            bio: data.bio,
-            profile_picture: data.profile_picture,
-            cover_photo: data.cover_photo,
-            profile_visibility_public: data.profile_visibility_public,
-            connection_visibility_public: data.connection_visibility_public,
-            interests: data.interests,
-        },
-    };
+    const user = result.rows[0];
     return user || null;
 };
 
@@ -181,10 +189,10 @@ export const updatePassword = async (client, userId, passwordHash) => {
 };
 
 // Invalidate all refresh tokens of a user
-export const invalidateRefreshToken = async (client, userId) => {
+export const invalidateRefreshToken = async (client, userId, refreshTokenHash) => {
     const query =
-        "UPDATE refresh_tokens SET is_active = false WHERE user_id = $1";
-    await client.query(query, [userId]);
+        "UPDATE refresh_tokens SET is_active = false WHERE user_id = $1 AND token_hash = $2";
+    await client.query(query, [userId, refreshTokenHash]);
 };
 
 export const invalidateRefreshTokenByTokenHash = async (client, tokenHash) => {
@@ -204,3 +212,12 @@ export const findRefreshTokenByTokenHash = async (
     const result = await client.query(query, [tokenHash, userId]);
     return result.rows[0] || null;
 };
+
+export const updateRefreshTokenLastUsed = async (client, refreshTokenHash) => {
+    const query =  {
+        text: `UPDATE refresh_tokens SET last_used_at = now() WHERE token_hash = $1`,
+        values: [refreshTokenHash],
+    };
+    await client.query(query, [refreshTokenHash]);
+}
+

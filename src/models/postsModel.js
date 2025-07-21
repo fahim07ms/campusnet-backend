@@ -28,38 +28,43 @@ const getAllPosts = async (client, { page = 1, limit = 10, authorId = null, comm
     }
 
     params.push(limit);
-    paramIndex++;
+    const limitIndex = paramIndex++;
     params.push(offset);
-    paramIndex++;
+    const offsetIndex = paramIndex++;
+    
+    
 
 
     const query = {
         text: `
             SELECT
                 p.*,
-                u.username as author_username,
-                up.first_name as author_first_name,
-                up.last_name as author_last_name,
-                up.profile_picture as author_profile_picture,
-                (
-                    SELECT EXISTS(
-                        SELECT 1 FROM saved_posts sp
-                        WHERE sp.post_id = p.id AND sp.user_id = $${paramIndex}
-                    )
-                ) as is_saved
+                u.username as "authorUsername",
+                u.email,
+                up.first_name as "authorFirstName",
+                up.last_name as "authorLastName",
+                up.profile_picture as "authorProfilePicture",
+                univ.name as "authorUniversity",
+                univ.country as "authorUniversityCountry"
+--                 (
+--                     SELECT EXISTS(
+--                         SELECT 1 FROM saved_posts sp
+--                         WHERE sp.post_id = p.id AND sp.user_id = $2
+--                     )
+--                 ) as "isSaved"
             FROM posts p
             JOIN users u ON p.author_id = u.id
             JOIN user_profiles up ON u.id = up.user_id
+            JOIN universities univ ON u.university_id = univ.id
             WHERE ${conditions.join(' AND ')}
             ORDER BY 
                 CASE WHEN p.is_pinned THEN 0 ELSE 1 END,
                 CASE WHEN p.is_featured THEN 0 ELSE 1 END,
                 p.created_at DESC
-            LIMIT $${paramIndex - 2} OFFSET $${paramIndex - 1}
+            LIMIT $${limitIndex} OFFSET $${offsetIndex}
         `,
-        values: [...params, authorId || null]
+        values: [...params]
     };
-
 
     params.splice(-2);
     const countQuery = {
@@ -102,16 +107,17 @@ const getPostById = async (client, postId, userId = null) => {
         text: `
             SELECT 
                 p.*,
-                u.username as author_username,
-                up.first_name as author_first_name,
-                up.last_name as author_last_name,
-                up.profile_picture as author_profile_picture,
+                u.username as "authorUsername",
+                u.email,
+                up.first_name as "authorFirstName",
+                up.last_name as "authorLastName",
+                up.profile_picture as "authorProfilePicture",
                 (
                     SELECT EXISTS(
                         SELECT 1 FROM saved_posts sp 
                         WHERE sp.post_id = p.id AND sp.user_id = $2
                     )
-                ) as is_saved
+                ) as "isSaved"
             FROM posts p
             JOIN users u ON p.author_id = u.id
             JOIN user_profiles up ON u.id = up.user_id

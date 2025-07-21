@@ -3,6 +3,7 @@ const router = express.Router();
 
 const {
     getAllGroups,
+    getAllUserGroups,
     getSpecificGroup,
     updateGroupData,
     deleteGroup,
@@ -20,6 +21,7 @@ const {groupModerator} = require("../middlewares/permissions");
 const {getAllEvents, createNewEvent} = require("../controllers/eventsController");
 
 router.get("/", authMiddleware, getAllGroups);
+router.get("/my", authMiddleware, getAllUserGroups);
 router.get("/:groupId", authMiddleware, getSpecificGroup);
 router.put("/:groupId", authMiddleware, groupModerator, updateGroupData);
 router.delete("/:groupId", authMiddleware, groupModerator, deleteGroup);
