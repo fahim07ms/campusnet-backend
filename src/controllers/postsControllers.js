@@ -2,6 +2,7 @@
 const pool = require("../config/db.js");
 const PostsModel = require("../models/postsModel.js");
 const CustomError = require("../utils/errors.js");
+const { getPostReactions } = require("../models/reactionsModel.js");
 
 /**
  * Get all posts with pagination and filtering

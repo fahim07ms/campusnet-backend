@@ -2,6 +2,8 @@ const pool = require('../config/db');
 const CommentModel = require('../models/commentsModel');
 
 const CustomError = require('../utils/errors');
+const AuthModel = require("../models/authModel");
+const {userDataFromId} = require("../models/authModel");
 
 const buildCommentTree = (comments) => {
     const map = {};
@@ -108,18 +110,38 @@ const createComment = async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query("BEGIN");
+        
+        const author = await AuthModel.userDataFromId(client, authorId);
+        if (!author) {
+            return res.status(404).json(CustomError.notFound({
+                message: "No commenter id found!"
+            }));
+        }
+        
+        
         const comment = await CommentModel.createComment(client, commentData);
         if (!comment) {
             return res.status(404).json(CustomError.notFound({
                 message: "No such identity found!"
             }));
         }
+        
+        const commentResult = {
+            id: comment.id,
+            content: comment.content,
+            authorId,
+            createdAt: comment.created_at,
+            username: author.username,
+            profilePicture: author.profilePicture,
+            firstName: author.firstName,
+            lastName: author.lastName,
+        }
 
         client.query("COMMIT");
         return res.status(201).json({
             message: "Comment posted successfully!",
             data: {
-                comment
+                comment: commentResult,
             }
         })
     } catch (error) {

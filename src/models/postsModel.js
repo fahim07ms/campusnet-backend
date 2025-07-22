@@ -31,9 +31,6 @@ const getAllPosts = async (client, { page = 1, limit = 10, authorId = null, comm
     const limitIndex = paramIndex++;
     params.push(offset);
     const offsetIndex = paramIndex++;
-    
-    
-
 
     const query = {
         text: `
@@ -45,17 +42,55 @@ const getAllPosts = async (client, { page = 1, limit = 10, authorId = null, comm
                 up.last_name as "authorLastName",
                 up.profile_picture as "authorProfilePicture",
                 univ.name as "authorUniversity",
-                univ.country as "authorUniversityCountry"
---                 (
---                     SELECT EXISTS(
---                         SELECT 1 FROM saved_posts sp
---                         WHERE sp.post_id = p.id AND sp.user_id = $2
---                     )
---                 ) as "isSaved"
+                univ.country as "authorUniversityCountry",
+                COALESCE(reactions.reactions_data, '[]'::json) as "reactions",
+                COALESCE(comments.comments_data, '[]'::json) as "comments",
+                COALESCE(reactions.reaction_count, 0) as "reactionCount",
+                COALESCE(comments.comment_count, 0) as "commentCount"
             FROM posts p
             JOIN users u ON p.author_id = u.id
             JOIN user_profiles up ON u.id = up.user_id
             JOIN universities univ ON u.university_id = univ.id
+            LEFT JOIN (
+                SELECT
+                    r.post_id,
+                    json_agg(
+                            json_build_object(
+                                    'id', r.id,
+                                    'reactionType', r.reaction_type,
+                                    'userId', r.user_id,
+                                    'username', ru.username,
+                                    'firstName', rup.first_name,
+                                    'lastName', rup.last_name
+                            )
+                    ) as reactions_data,
+                    COUNT(*) as reaction_count
+                FROM reactions r
+                         JOIN users ru ON r.user_id = ru.id
+                         JOIN user_profiles rup ON ru.id = rup.user_id
+                GROUP BY r.post_id
+            ) reactions ON p.id = reactions.post_id
+            LEFT JOIN (
+                SELECT
+                    c.post_id,
+                    json_agg(
+                            json_build_object(
+                                    'id', c.id,
+                                    'content', c.content,
+                                    'authorId', c.author_id,
+                                    'username', cu.username,
+                                    'firstName', cup.first_name,
+                                    'lastName', cup.last_name,
+                                    'profilePicture', cup.profile_picture,
+                                    'createdAt', c.created_at
+                            ) ORDER BY c.created_at DESC
+                    ) as comments_data,
+                    COUNT(*) as comment_count
+                FROM comments c
+                         JOIN users cu ON c.author_id = cu.id
+                         JOIN user_profiles cup ON cu.id = cup.user_id
+                GROUP BY c.post_id
+            ) comments ON p.id = comments.post_id
             WHERE ${conditions.join(' AND ')}
             ORDER BY 
                 CASE WHEN p.is_pinned THEN 0 ELSE 1 END,
@@ -112,18 +147,56 @@ const getPostById = async (client, postId, userId = null) => {
                 up.first_name as "authorFirstName",
                 up.last_name as "authorLastName",
                 up.profile_picture as "authorProfilePicture",
-                (
-                    SELECT EXISTS(
-                        SELECT 1 FROM saved_posts sp 
-                        WHERE sp.post_id = p.id AND sp.user_id = $2
-                    )
-                ) as "isSaved"
+                COALESCE(reactions.reactions_data, '[]'::json) as "reactions",
+                COALESCE(comments.comments_data, '[]'::json) as "comments",
+                COALESCE(reactions.reaction_count, 0) as "reactionCount",
+                COALESCE(comments.comment_count, 0) as "commentCount"
             FROM posts p
             JOIN users u ON p.author_id = u.id
             JOIN user_profiles up ON u.id = up.user_id
+            LEFT JOIN (
+                SELECT
+                    r.post_id,
+                    json_agg(
+                            json_build_object(
+                                    'id', r.id,
+                                    'reactionType', r.reaction_type,
+                                    'userId', r.user_id,
+                                    'username', ru.username,
+                                    'firstName', rup.first_name,
+                                    'lastName', rup.last_name
+                            )
+                    ) as reactions_data,
+                    COUNT(*) as reaction_count
+                FROM reactions r
+                         JOIN users ru ON r.user_id = ru.id
+                         JOIN user_profiles rup ON ru.id = rup.user_id
+                GROUP BY r.post_id
+            ) reactions ON p.id = reactions.post_id
+            LEFT JOIN (
+                SELECT
+                    c.post_id,
+                    json_agg(
+                            json_build_object(
+                                    'id', c.id,
+                                    'content', c.content,
+                                    'authorId', c.author_id,
+                                    'username', cu.username,
+                                    'firstName', cup.first_name,
+                                    'lastName', cup.last_name,
+                                    'profilePicture', cup.profile_picture,
+                                    'createdAt', c.created_at
+                            ) ORDER BY c.created_at DESC
+                    ) as comments_data,
+                    COUNT(*) as comment_count
+                FROM comments c
+                         JOIN users cu ON c.author_id = cu.id
+                         JOIN user_profiles cup ON cu.id = cup.user_id
+                GROUP BY c.post_id
+            ) comments ON p.id = comments.post_id
             WHERE p.id = $1
         `,
-        values: [postId, userId || null]
+        values: [postId]
     };
 
     try {
