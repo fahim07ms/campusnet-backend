@@ -13,15 +13,21 @@ const addPostReaction = async (reactionData) => {
         // If yes, then update it
         // Else create new one
         const checkPostReaction = await client.query(`SELECT * FROM reactions WHERE post_id = $1 AND user_id = $2`, [postId, userId]);
-        let query;
+        let query, reactionCountQuery = null;
         if (checkPostReaction.rows.length > 0) {
             query = `UPDATE reactions SET reaction_type = $3 WHERE user_id = $1 AND post_id = $2 RETURNING *`;
         } else {
             query = `INSERT INTO reactions (user_id, post_id, reaction_type) VALUES ($1, $2, $3) RETURNING *`;
+            reactionCountQuery = `UPDATE posts SET like_count = like_count + 1 WHERE id = $1`;
+            
         }
 
         const values = [userId, postId, reactionType];
         const result = await client.query(query, values);
+        
+        if (reactionCountQuery) {
+            await client.query(reactionCountQuery, [postId]);
+        }
 
         await client.query("COMMIT");
 
@@ -46,15 +52,20 @@ const addCommentReaction = async (reactionData) => {
         // If yes, then update it
         // Else create new one
         const checkPostReaction = await client.query(`SELECT * FROM reactions WHERE comment_id = $1 AND user_id = $2`, [commentId, userId]);
-        let query;
+        let query, reactionCountQuery = null;
         if (checkPostReaction.rows.length > 0) {
             query = `UPDATE reactions SET reaction_type = $3 WHERE user_id = $1 AND comment_id = $2 RETURNING *`;
         } else {
             query = `INSERT INTO reactions (user_id, comment_id, reaction_type) VALUES ($1, $2, $3) RETURNING *`;
+            reactionCountQuery = `UPDATE comments SET like_count = like_count + 1 WHERE id = $1`;
         }
 
         const values = [userId, commentId, reactionType];
         const result = await client.query(query, values);
+        
+        if (reactionCountQuery) {
+            await client.query(reactionCountQuery, [commentId]);
+        }
 
         await client.query("COMMIT");
 
@@ -77,6 +88,8 @@ const deleteCommentReaction = async ({ commentId, reactionId, userId }) => {
         const query = `DELETE FROM reactions WHERE id = $1 AND comment_id = $2 AND user_id = $3 RETURNING *`;
         const values = [reactionId, commentId, userId];
         const result = await client.query(query, values);
+        
+        await client.query(`UPDATE comments SET like_count = like_count - 1 WHERE id = $1`, [commentId]);
 
         await client.query("COMMIT");
 
@@ -99,6 +112,8 @@ const deletePostReaction = async ({ postId, reactionId, userId }) => {
         const query = `DELETE FROM reactions WHERE id = $1 AND post_id = $2 AND user_id = $3 RETURNING *`;
         const values = [reactionId, postId, userId];
         const result = await client.query(query, values);
+        
+        await client.query(`UPDATE posts SET like_count = like_count - 1 WHERE id = $1`, [postId]);
 
         await client.query("COMMIT");
 

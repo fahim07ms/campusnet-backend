@@ -131,6 +131,9 @@ const deletePostReaction = async (req, res, next) => {
 
         return res.status(200).json({
             message: "Reaction deleted successfully!",
+            data: {
+                reaction: result
+            }
         });
     } catch (error) {
         console.error("Error in deletePostReaction controller:", error);
@@ -171,6 +174,9 @@ const deleteCommentReaction = async (req, res, next) => {
 
         return res.status(200).json({
             message: "Reaction deleted successfully!",
+            data: {
+                reaction: result
+            }
         });
     } catch (error) {
         console.error("Error in deleteCommentReaction controller:", error);
