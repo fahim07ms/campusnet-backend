@@ -11,6 +11,8 @@ const {
     unapprovePost,
     togglePinPost,
     toggleFeaturePost,
+    getFeed,
+    getPublicFeed
 } = require('../controllers/postsControllers');
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const { isPostModerator } = require('../middlewares/permissions');
@@ -24,6 +26,10 @@ const {
 
 router.get('/', authMiddleware, getPosts);
 router.post('/', authMiddleware, createPost);
+
+router.get("/feed", authMiddleware, getFeed);
+router.get("/feed/public", authMiddleware, getPublicFeed);
+
 
 router.get('/:postId', authMiddleware, getPostById);
 router.put('/:postId', authMiddleware, updatePost);

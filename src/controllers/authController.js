@@ -8,6 +8,8 @@ dotenv.config();
 // Import authentication model
 const AuthModel = require("../models/authModel");
 
+const CommunityModel = require("../models/communitiesModel");
+
 // Normal Utility Functions
 const {
     generateRandomToken,
@@ -314,6 +316,32 @@ const verifyEmail = async (req, res) => {
             null,
         );
 
+        const community = await client.query(`SELECT * FROM communities WHERE university_id = $1`, [user.universityId]);
+        if (community.rowCount > 0) {
+            // Add to the community
+            const communityId = community.rows[0].id;
+            const memberData = {
+                userId: user.id,
+                communityId,
+                role: 'member'
+            }
+            const communitMember = await CommunityModel.addCommunityMember(client, memberData);
+        } else {
+            // Create a community
+            const communityData = {
+                name: `${user.universityName} Community`,
+                description: `Official Group of ${user.universityName} Community`,
+                rules: null,
+                universityId: user.universityId,
+                coverImage: null,
+                logo: null,
+                isPublic: false,
+                creatorId: user.id,
+            }
+            
+            const result = await CommunityModel.createNewCommunity(client, communityData);
+        }
+        
         res.status(201).json({
             message: "Email verified successfully",
         });

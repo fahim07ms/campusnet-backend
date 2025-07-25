@@ -108,6 +108,51 @@ const getAllUserGroups = async (req, res) => {
 }
 
 /**
+ * Controller for getting suggested groups for the authenticated user
+ * Returns groups from user's communities that they haven't joined yet
+ */
+const getSuggestedGroups = async (req, res) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const userId = req.userId;
+    
+    console.log(page,limit);
+    
+    // Check if page and limit are valid
+    if (page < 1 || limit < 1) {
+        console.log("Running!!");
+        return res.status(400).json(customError.badRequest({
+            message: "Page and limit must be positive integers.",
+        }))
+    }
+    
+    let client;
+    try {
+        client = await pool.connect();
+        
+        const result = await GroupsModel.getSuggestedGroups(client, userId, page, limit);
+        
+        return res.status(200).json({
+            message: "Successfully retrieved suggested groups.",
+            data: {
+                groups: result.groups,
+            },
+            meta: result.meta,
+        });
+    } catch (error) {
+        console.error("Error in getSuggestedGroups controller:", error);
+        return res.status(500).json(customError.internalServerError({
+            message: "Internal server error",
+            details: {
+                error: error.message,
+            }
+        }))
+    } finally {
+        client.release();
+    }
+};
+
+/**
  * Controller for creating a new group
  */
 const createGroup = async (req, res) => {
@@ -368,7 +413,7 @@ const getAllMembers = async (req, res) => {
 
         // Query for members
         const result = await GroupsModel.getGroupMembers(client, page, limit, groupId);
-        console.log(result)
+        
         return res.status(200).json({
             message: "Successfully retrieved members.",
             data: {
@@ -749,6 +794,7 @@ const rejectMemberRequest = async (req, res) => {
 module.exports = {
     getAllGroups,
     getAllUserGroups,
+    getSuggestedGroups,
     createGroup,
     getSpecificGroup,
     updateGroupData,

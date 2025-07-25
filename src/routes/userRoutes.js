@@ -3,6 +3,8 @@ const userController = require("../controllers/userController.js");
 const postsController = require("../controllers/postsControllers");
 const { authMiddleware } = require("../middlewares/authMiddleware.js");
 
+const eventController = require("../controllers/eventsController");
+
 const router = express.Router();
 
 router.get("/", authMiddleware, userController.getUsers);
@@ -12,6 +14,9 @@ router.get("/me/profile", authMiddleware, userController.getMyProfile);
 router.get("/me", authMiddleware, userController.getMe);
 router.patch("/me/password", authMiddleware, userController.updateMyPassword);
 router.get("/:userId", authMiddleware, userController.getUserById);
+
+router.get("/me/events", authMiddleware, eventController.getUserEvents);
+router.get("/me/events/suggested", authMiddleware, eventController.getSuggestedEvents);
 
 router.put("/me/profile", authMiddleware, userController.updateMyProfile);
 router.get(
@@ -54,11 +59,11 @@ router.delete(
     authMiddleware,
     userController.deleteMyAchievement,
 );
-router.post(
-    "/me/profile/blood-group",
-    authMiddleware,
-    userController.updateMyBloodGroup,
-);
+// router.post(
+//     "/me/profile/blood-group",
+//     authMiddleware,
+//     userController.updateMyBloodGroup,
+// );
 
 // Posts save
 router.get("/me/posts/saved", authMiddleware, postsController.getSavedPosts);

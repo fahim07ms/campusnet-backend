@@ -777,63 +777,65 @@ const deleteMyAchievement = async (req, res, next) => {
     }
 };
 
-const updateMyBloodGroup = async (req, res, next) => {
-    const userId = req.userId;
-    const { blood_group } = req.body;
 
-    if (!userId) {
-        return next(
-            CustomError.unauthorized(
-                "Authentication required. User ID not found in request.",
-            ),
-        );
-    }
 
-    if (!blood_group) {
-        return next(CustomError.badRequest("Blood group is required."));
-    }
-
-    let client;
-    try {
-        client = await pool.connect();
-        const updatedProfile = await UserModel.updateUserBloodGroup(
-            client,
-            userId,
-            blood_group,
-        );
-
-        if (!updatedProfile) {
-            return next(
-                CustomError.notFound(
-                    "User profile not found or no changes made.",
-                ),
-            );
-        }
-
-        res.status(200).json({
-            message: "Blood group updated successfully.",
-            data: updatedProfile,
-        });
-    } catch (error) {
-        if (error.name && error.code) {
-            next(error);
-        } else {
-            console.error(
-                `Unexpected error in updateMyBloodGroup controller for user ${userId}:`,
-                error,
-            );
-            next(
-                CustomError.internalServerError(
-                    "An unexpected error occurred while updating blood group.",
-                ),
-            );
-        }
-    } finally {
-        if (client) {
-            client.release();
-        }
-    }
-};
+// const updateMyBloodGroup = async (req, res, next) => {
+//     const userId = req.userId;
+//     const { blood_group } = req.body;
+//
+//     if (!userId) {
+//         return next(
+//             CustomError.unauthorized(
+//                 "Authentication required. User ID not found in request.",
+//             ),
+//         );
+//     }
+//
+//     if (!blood_group) {
+//         return next(CustomError.badRequest("Blood group is required."));
+//     }
+//
+//     let client;
+//     try {
+//         client = await pool.connect();
+//         const updatedProfile = await UserModel.updateUserBloodGroup(
+//             client,
+//             userId,
+//             blood_group,
+//         );
+//
+//         if (!updatedProfile) {
+//             return next(
+//                 CustomError.notFound(
+//                     "User profile not found or no changes made.",
+//                 ),
+//             );
+//         }
+//
+//         res.status(200).json({
+//             message: "Blood group updated successfully.",
+//             data: updatedProfile,
+//         });
+//     } catch (error) {
+//         if (error.name && error.code) {
+//             next(error);
+//         } else {
+//             console.error(
+//                 `Unexpected error in updateMyBloodGroup controller for user ${userId}:`,
+//                 error,
+//             );
+//             next(
+//                 CustomError.internalServerError(
+//                     "An unexpected error occurred while updating blood group.",
+//                 ),
+//             );
+//         }
+//     } finally {
+//         if (client) {
+//             client.release();
+//         }
+//     }
+// };
 
 module.exports = {
     getUsers,
@@ -850,5 +852,5 @@ module.exports = {
     addMyAchievement,
     updateMyAchievement,
     deleteMyAchievement,
-    updateMyBloodGroup,
+    // updateMyBloodGroup,
 };

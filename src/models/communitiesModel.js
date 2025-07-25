@@ -177,7 +177,7 @@ const createNewCommunity = async (client, communityData) => {
 /**
  * Get a community by ID
  */
-const getCommunityById = async (client, communityId) => {
+const  getCommunityById = async (client, communityId) => {
     try {
         // Find out the community with given id
         const query = `
@@ -308,22 +308,22 @@ const getAllCommunityMembers = async (client, communityId, page, limit, search, 
 
         // Initial query part
         let query = `
-            SELECT cm.community_id as communityId,
+            SELECT cm.community_id as "communityId",
                    cm.role,
-                   cm.joined_at as joinedAt,
-                   u.id as userId,
+                   cm.joined_at as "joinedAt",
+                   u.id as "userId",
                    u.username,
                    u.email,
-                   u.is_active as isActive,
-                   up.first_name as firstName,
-                   up.last_name as lastName,
+                   u.is_active as "isActive",
+                   up.first_name as "firstName",
+                   up.last_name as "lastName",
                    up.bio,
-                   up.profile_picture as profilePicture,
-                   up.cover_photo as coverPhoto,
+                   up.profile_picture as "profilePicture",
+                   up.cover_photo as "coverPhoto",
                    up.department,
                    up.interests,
-                   up.profile_visibility_public as profileVisibilityPublic,
-                   up.connection_visibility_public as connectionVisibilityPublic
+                   up.profile_visibility_public as "profileVisibilityPublic",
+                   up.connection_visibility_public as "connectionVisibilityPublic"
             FROM community_members cm
             LEFT JOIN users u ON cm.user_id = u.id
             LEFT JOIN user_profiles up ON cm.user_id = up.user_id
@@ -383,29 +383,9 @@ const getAllCommunityMembers = async (client, communityId, page, limit, search, 
         const result = await client.query(query, queryParams);
 
         // Format members according to the CommunityMember schema
-        const members = result.rows.map(member => ({
-            user: {
-                id: member.userId,
-                username: member.username,
-                email: member.email,
-                isActive: member.isActive,
-                firstName: member.firstName,
-                lastName: member.lastName,
-                profilePicture: member.profilePicture,
-                coverPhoto: member.coverPhoto,
-                bio: member.bio,
-                department: member.department,
-                interests: member.interests,
-                profileVisibilityPublic: member.profileVisibilityPublic,
-                connectionVisibilityPublic: member.connectionVisibilityPublic,
-            },
-            communityId: member["community_id"],
-            role: member.role,
-            joinedAt: member.joinedAt,
-        }));
 
         return {
-            members,
+            members: result.rows,
             totalItems: parseInt(countResult.rows[0].count),
             itemCount: result.rows.length
         };

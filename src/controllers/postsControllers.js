@@ -529,6 +529,117 @@ const toggleFeaturePost = async (req, res, next) => {
 };
 
 
+/**
+ * Get personalized feed for the authenticated user
+ */
+const getFeed = async (req, res, next) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const sortBy = req.query.sortBy || 'recent'; // recent, popular, trending
+    const userId = req.userId; // From auth middleware
+    
+    // Check if valid page and limit is given or not
+    if (page < 1 || limit < 1) {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Page and limit must be positive integers.",
+        }));
+    }
+    
+    // Validate sortBy parameter
+    const validSortOptions = ['recent', 'popular', 'trending'];
+    if (!validSortOptions.includes(sortBy)) {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Invalid sortBy parameter. Valid options are: recent, popular, trending",
+        }));
+    }
+    
+    let client;
+    try {
+        client = await pool.connect();
+        const result = await PostsModel.getFeedPosts(client, userId, {
+            page,
+            limit,
+            sortBy
+        });
+        
+        res.status(200).json({
+            message: "Feed retrieved successfully.",
+            data: {
+                posts: result.posts,
+            },
+            meta: result.meta,
+        });
+    } catch (error) {
+        console.error("Unexpected error in getFeed controller:", error);
+        return res.status(500).json(CustomError.internalServerError({
+            message: "An unexpected error occurred while fetching feed.",
+            details: {
+                error: error.message
+            }
+        }));
+    } finally {
+        if (client) {
+            client.release();
+        }
+    }
+};
+
+/**
+ * Get public feed (for non-authenticated users or public access)
+ */
+const getPublicFeed = async (req, res, next) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const sortBy = req.query.sortBy || 'recent';
+    
+    // Check if valid page and limit is given or not
+    if (page < 1 || limit < 1) {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Page and limit must be positive integers.",
+        }));
+    }
+    
+    // Validate sortBy parameter
+    const validSortOptions = ['recent', 'popular', 'trending'];
+    if (!validSortOptions.includes(sortBy)) {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Invalid sortBy parameter. Valid options are: recent, popular, trending",
+        }));
+    }
+    
+    let client;
+    try {
+        client = await pool.connect();
+        const result = await PostsModel.getPublicFeedPosts(client, {
+            page,
+            limit,
+            sortBy
+        });
+        
+        res.status(200).json({
+            message: "Public feed retrieved successfully.",
+            data: {
+                posts: result.posts,
+            },
+            meta: result.meta,
+        });
+    } catch (error) {
+        console.error("Unexpected error in getPublicFeed controller:", error);
+        return res.status(500).json(CustomError.internalServerError({
+            message: "An unexpected error occurred while fetching public feed.",
+            details: {
+                error: error.message
+            }
+        }));
+    } finally {
+        if (client) {
+            client.release();
+        }
+    }
+};
+
+
+
 module.exports = {
     getPosts,
     getPostById,
@@ -541,5 +652,7 @@ module.exports = {
     toggleFeaturePost,
     savePost,
     unsavePost,
-    getSavedPosts
+    getSavedPosts,
+    getFeed,
+    getPublicFeed
 };

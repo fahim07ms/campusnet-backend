@@ -12,13 +12,13 @@ const GroupsModel = require('../models/groupsModel');
  */
 const createNewEvent = async (req, res) => {
     const userId = req.userId;
-    const { title, description, startDate, endDate, location, venueDetails, eventLink, maxAttendees, coverImage, isPublic, status } = req.body;
+    const { title, description, startDate, endDate, location, venueDetails, eventLink, maxAttendees, coverImage, isPublic, isOnline, status } = req.body;
     let { communityId, groupId } = req.params;
 
     // Validate required fields
-    if (!title || !description || !startDate || !endDate || !location) {
+    if (!title || !description || !startDate || !endDate) {
         return res.status(400).json(customError.badRequest({
-            message: "Title, description, startDate, endDate, and location are required!",
+            message: "Title, description, startDate, endDate are required!",
         }));
     }
 
@@ -86,6 +86,7 @@ const createNewEvent = async (req, res) => {
             startDate,
             endDate,
             location,
+            isOnline: isOnline !== undefined ? isOnline : false,
             venueDetails,
             eventLink,
             maxAttendees,
@@ -594,6 +595,96 @@ const updateAttendeeStatus = async (req, res) => {
     }
 };
 
+/**
+ * Controller for getting events that a user is attending or interested in
+ */
+const getUserEvents = async (req, res) => {
+    const userId = req.userId;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const status = req.query.status; // 'attending', 'interested', or undefined for both
+    
+    // Check if page and limit are positive numbers
+    if (page < 1 || limit < 1) {
+        return res.status(400).json(customError.badRequest({
+            message: "Page and limit must be positive integers.",
+        }));
+    }
+    
+    // Validate status if provided
+    if (status && !['attending', 'interested'].includes(status)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Status must be either 'attending' or 'interested'.",
+        }));
+    }
+    
+    let client;
+    try {
+        client = await pool.connect();
+        
+        // Get user events
+        const result = await EventsModel.getUserEvents(client, userId, page, limit, status);
+        
+        return res.status(200).json({
+            message: "Successfully retrieved user events.",
+            data: {
+                events: result.events,
+            },
+            meta: result.meta,
+        });
+    } catch (error) {
+        console.error("Error in getUserEvents controller:", error);
+        return res.status(500).json(customError.internalServerError({
+            message: "Internal server error",
+            details: {
+                error: error.message,
+            }
+        }));
+    } finally {
+        if (client) client.release();
+    }
+};
+
+const getSuggestedEvents = async (req, res) => {
+    const userId = req.userId;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    
+    // Check if page and limit are positive numbers
+    if (page < 1 || limit < 1) {
+        return res.status(400).json(customError.badRequest({
+            message: "Page and limit must be positive integers.",
+        }));
+    }
+    
+    let client;
+    try {
+        client = await pool.connect();
+        
+        // Get suggested events for user
+        const result = await EventsModel.getSuggestedEventsForUser(client, userId, page, limit);
+        
+        return res.status(200).json({
+            message: "Successfully retrieved suggested events.",
+            data: {
+                events: result.events,
+            },
+            meta: result.meta,
+        });
+    } catch (error) {
+        console.error("Error in getSuggestedEvents controller:", error);
+        return res.status(500).json(customError.internalServerError({
+            message: "Internal server error",
+            details: {
+                error: error.message,
+            }
+        }));
+    } finally {
+        if (client) client.release();
+    }
+};
+
+
 
 
 module.exports = {
@@ -607,4 +698,7 @@ module.exports = {
     markAttendanceStatus,
     removeAttendanceStatus,
     updateAttendeeStatus,
+    
+    getUserEvents,
+    getSuggestedEvents,
 }

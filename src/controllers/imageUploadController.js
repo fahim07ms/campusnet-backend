@@ -35,9 +35,6 @@ const uploadImage = async (req, res) => {
                 .from("images")
                 .getPublicUrl(data.path);
             
-            console.log(file);
-            console.log(image);
-            
             listOfImageUrls.push(image.publicUrl);
         }
         

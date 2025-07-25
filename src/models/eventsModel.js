@@ -10,6 +10,7 @@ const createEvent = async (client, eventData) => {
         startDate,
         endDate,
         location,
+        isOnline,
         venueDetails,
         eventLink,
         maxAttendees,
@@ -34,8 +35,9 @@ const createEvent = async (client, eventData) => {
             cover_image,
             is_public,
             status,
-            organizer_id
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`;
+            organizer_id,
+            attending_count
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 1) RETURNING *`;
 
     const values = [
         title,
@@ -56,6 +58,12 @@ const createEvent = async (client, eventData) => {
 
     try {
         const result = await client.query(query, values);
+        
+        const attendeeQuery = `INSERT INTO event_attendees (event_id, user_id, status) VALUES ($1, $2, 'attending')`;
+        const attendeeValues = [result.rows[0].id, organizerId];
+        
+        await client.query(attendeeQuery, attendeeValues);
+        
         return result.rows[0];
     } catch (err) {
         console.error('Error creating event:', err);
@@ -321,6 +329,8 @@ const getEventAttendees = async (client, page, limit, eventId) => {
             u.id as "userId",
             u.username,
             u.email,
+            u.is_active as "isActive",
+            u.role as "role",
             up.first_name as "firstName",
             up.last_name as "lastName",
             up.profile_picture as "profilePicture",
@@ -458,6 +468,194 @@ const updateEventAttendeeStatus = async (client, eventId, userId, status) => {
 
 }
 
+const getUserEvents = async (client, userId, page, limit, status = null) => {
+    const offset = (page - 1) * limit;
+    
+    let query = `
+        SELECT
+            e.id,
+            e.title,
+            e.description,
+            e.community_id as "communityId",
+            e.group_id as "groupId",
+            e.start_date as "startDate",
+            e.end_date as "endDate",
+            e.location,
+            e.venue_details as "venueDetails",
+            e.event_link as "eventLink",
+            e.max_attendees as "maxAttendees",
+            e.cover_image as "coverImage",
+            e.is_public as "isPublic",
+            e.status,
+            e.created_at as "createdAt",
+            e.updated_at as "updatedAt",
+            e.organizer_id as "organizerId",
+            u.username as "organizerUsername",
+            u.email as "organizerEmail",
+            up.first_name as "organizerFirstName",
+            up.last_name as "organizerLastName",
+            up.profile_picture as "organizerProfilePicture",
+            e.attending_count as "attendeeCount",
+            e.interested_count as "interestedCount",
+            ea.status as "userStatus",
+            ea.joined_at as "userJoinedAt",
+            c.name as "communityName",
+            g.name as "groupName"
+        FROM events e
+        INNER JOIN event_attendees ea ON e.id = ea.event_id
+        LEFT JOIN users u ON e.organizer_id = u.id
+        LEFT JOIN user_profiles up ON u.id = up.user_id
+        LEFT JOIN communities c ON e.community_id = c.id
+        LEFT JOIN groups g ON e.group_id = g.id
+        WHERE ea.user_id = $1 AND e.start_date >= CURRENT_DATE`;
+    
+    let countQuery = `
+        SELECT COUNT(*)
+        FROM event_attendees ea
+        WHERE ea.user_id = $1`;
+    
+    let params = [userId, limit, offset];
+    let countParams = [userId];
+    
+    // Filter by status if provided (attending or interested)
+    if (status) {
+        query += ` AND ea.status = $4`;
+        countQuery += ` AND ea.status = $2`;
+        params.push(status);
+        countParams.push(status);
+    }
+    
+    query += ` ORDER BY ea.joined_at DESC LIMIT $2 OFFSET $3`;
+    
+    try {
+        const eventsResult = await client.query(query, params);
+        const countResult = await client.query(countQuery, countParams);
+        
+        const totalEvents = parseInt(countResult.rows[0].count, 10);
+        const totalPages = Math.ceil(totalEvents / limit);
+        
+        return {
+            events: eventsResult.rows,
+            meta: {
+                totalItems: totalEvents,
+                itemsPerPage: limit,
+                itemCount: eventsResult.rows.length,
+                currentPage: page,
+                totalPages: totalPages,
+            }
+        };
+    } catch (err) {
+        console.error('Error fetching user events:', err);
+        throw CustomError.internalServerError('Failed to retrieve user events');
+    }
+};
+
+const getSuggestedEventsForUser = async (client, userId, page, limit) => {
+    const offset = (page - 1) * limit;
+    
+    const query = `
+        SELECT
+            e.id,
+            e.title,
+            e.description,
+            e.community_id as "communityId",
+            e.group_id as "groupId",
+            e.start_date as "startDate",
+            e.end_date as "endDate",
+            e.location,
+            e.venue_details as "venueDetails",
+            e.event_link as "eventLink",
+            e.max_attendees as "maxAttendees",
+            e.cover_image as "coverImage",
+            e.is_public as "isPublic",
+            e.status,
+            e.created_at as "createdAt",
+            e.updated_at as "updatedAt",
+            e.organizer_id as "organizerId",
+            u.username as "organizerUsername",
+            u.email as "organizerEmail",
+            up.first_name as "organizerFirstName",
+            up.last_name as "organizerLastName",
+            up.profile_picture as "organizerProfilePicture",
+            e.attending_count as "attendeeCount",
+            e.interested_count as "interestedCount",
+            c.name as "communityName",
+            c.description as "communityDescription",
+            g.name as "groupName",
+            g.description as "groupDescription"
+        FROM events e
+        LEFT JOIN users u ON e.organizer_id = u.id
+        LEFT JOIN user_profiles up ON u.id = up.user_id
+        LEFT JOIN communities c ON e.community_id = c.id
+        LEFT JOIN groups g ON e.group_id = g.id
+        WHERE
+            e.start_date >= CURRENT_DATE
+            AND e.is_public = true
+            AND e.status = 'upcoming'
+--             AND e.organizer_id != $1
+            AND e.id NOT IN (
+                SELECT event_id
+                FROM event_attendees
+                WHERE user_id = $1
+            )
+        ORDER BY
+            CASE
+                WHEN e.community_id IN (
+                    SELECT community_id
+                    FROM community_members
+                    WHERE user_id = $1
+                ) THEN 1
+                WHEN e.group_id IN (
+                    SELECT group_id
+                    FROM group_members
+                    WHERE user_id = $1
+                ) THEN 2
+                ELSE 3
+            END,
+            e.start_date ASC,
+            e.created_at DESC
+        LIMIT $2 OFFSET $3`;
+    
+    const countQuery = `
+        SELECT COUNT(*)
+        FROM events e
+        WHERE
+            e.start_date >= CURRENT_DATE
+            AND e.is_public = true
+            AND e.status = 'upcoming'
+            AND e.organizer_id != $1
+            AND e.id NOT IN (
+                SELECT event_id
+                FROM event_attendees
+                WHERE user_id = $1
+            )`;
+    
+    const params = [userId, limit, offset];
+    const countParams = [userId];
+    
+    try {
+        const eventsResult = await client.query(query, params);
+        const countResult = await client.query(countQuery, countParams);
+        
+        const totalEvents = parseInt(countResult.rows[0].count, 10);
+        const totalPages = Math.ceil(totalEvents / limit);
+        
+        return {
+            events: eventsResult.rows,
+            meta: {
+                totalItems: totalEvents,
+                itemsPerPage: limit,
+                itemCount: eventsResult.rows.length,
+                currentPage: page,
+                totalPages: totalPages,
+            }
+        };
+    } catch (err) {
+        console.error('Error fetching suggested events:', err);
+        throw CustomError.internalServerError('Failed to retrieve suggested events');
+    }
+};
+
 
 
 module.exports = {
@@ -471,4 +669,6 @@ module.exports = {
     removeAttendanceStatus,
     updateEventAttendeeStatus,
     findEventAttendee,
+    getUserEvents,
+    getSuggestedEventsForUser,
 }

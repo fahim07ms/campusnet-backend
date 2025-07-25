@@ -92,6 +92,8 @@ const createComment = async (req, res) => {
     const { parentId } = req.body;
     const { content } = req.body;
     const authorId = req.userId;
+    
+    
 
     const commentData = {
         content,

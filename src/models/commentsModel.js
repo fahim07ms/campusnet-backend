@@ -1,6 +1,7 @@
 const { pool } = require("../config/db");
 const {query} = require("express-validator");
 const PostModel = require("./postsModel");
+const EventModel = require("./eventsModel");
 
 const getCommentById = async (client, commentId) => {
     const query = {
@@ -17,7 +18,27 @@ const getAllComments = async (client, identityField, identityId, page = 1, limit
     const field = identityField + '_id';
 
     const query = {
-        text: `SELECT * FROM comments WHERE ${field} = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+        text: `SELECT
+                    c.id,
+                    c.post_id as "postId",
+                    c.event_id as "eventId",
+                    c.parent_id as "parentId",
+                    c.content,
+                    c.author_id as "authorId",
+                    c.created_at as "createdAt",
+                    c.updated_at as "updatedAt",
+                    u.username as "authorUsername",
+                    u.email,
+                    up.first_name as "authorFirstName",
+                    up.last_name as "authorLastName",
+                    up.profile_picture as "authorProfilePicture",
+                    univ.name as "authorUniversity",
+                    univ.country as "authorUniversityCountry"
+                FROM comments c
+                JOIN users u ON c.author_id = u.id
+                JOIN user_profiles up ON u.id = up.user_id
+                JOIN universities univ ON u.university_id = univ.id
+                WHERE ${field} = $1 ORDER BY c.created_at DESC LIMIT $2 OFFSET $3`,
         values: [identityId, limit, offset]
     }
 
@@ -78,7 +99,8 @@ const createComment = async (client, commentData) => {
         }
     } else if (eventId) {
         // Check if event exists or not
-        // TODO
+        const event = await EventModel.findEventById(client, eventId);
+        if (!event) return null;
 
         query = {
             text: `INSERT INTO comments (event_id, content, author_id) VALUES ($1, $2, $3) RETURNING *`,
@@ -86,6 +108,8 @@ const createComment = async (client, commentData) => {
         }
     }
 
+    console.log(eventId);
+    
     const result = await client.query(query);
     return result.rows[0] || null;
 }

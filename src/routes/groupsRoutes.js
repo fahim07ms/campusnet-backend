@@ -4,6 +4,7 @@ const router = express.Router();
 const {
     getAllGroups,
     getAllUserGroups,
+    getSuggestedGroups,
     getSpecificGroup,
     updateGroupData,
     deleteGroup,
@@ -22,6 +23,7 @@ const {getAllEvents, createNewEvent} = require("../controllers/eventsController"
 
 router.get("/", authMiddleware, getAllGroups);
 router.get("/my", authMiddleware, getAllUserGroups);
+router.get("/suggested", authMiddleware, getSuggestedGroups);
 router.get("/:groupId", authMiddleware, getSpecificGroup);
 router.put("/:groupId", authMiddleware, groupModerator, updateGroupData);
 router.delete("/:groupId", authMiddleware, groupModerator, deleteGroup);

@@ -5,7 +5,20 @@ const getALlGroups = async (client, page, limit, communityId) => {
     const offset = (page - 1) * limit;
 
     // Make initial query and parameters
-    let query = `SELECT * FROM groups ORDER BY name LIMIT $1 OFFSET $2`;
+    let query = `SELECT
+                            g.id,
+                            g.community_id as "communityId",
+                            g.name,
+                            g.description,
+                            g.rules,
+                            g.cover_image as "coverImage",
+                            g.logo,
+                            g.is_public as "isPublic",
+                            g.member_approval as "memberApprovalRequired",
+                            g.post_approval as "postApprovalRequired",
+                            g.created_at as "createdAt",
+                            g.member_count as "memberCount"
+                        FROM groups g ORDER BY name LIMIT $1 OFFSET $2`;
     let countQuery = `SELECT COUNT(*) FROM groups`;
     let params = [limit, offset];
 
@@ -43,7 +56,20 @@ const getALlGroups = async (client, page, limit, communityId) => {
 
 const getAllGroupsForUser = async (client, userId, page, limit) => {
     const offset = (page - 1) * limit;
-    const query = `SELECT * FROM groups WHERE id IN (SELECT group_id FROM group_members WHERE user_id = $1) LIMIT $2 OFFSET $3`;
+    const query = `SELECT
+                               g.id,
+                               g.community_id as "communityId",
+                               g.name,
+                               g.description,
+                               g.rules,
+                               g.cover_image as "coverImage",
+                               g.logo,
+                               g.is_public as "isPublic",
+                               g.member_approval as "memberApprovalRequired",
+                               g.post_approval as "postApprovalRequired",
+                               g.created_at as "createdAt",
+                               g.member_count as "memberCount"
+                        FROM groups g WHERE id IN (SELECT group_id FROM group_members WHERE user_id = $1) LIMIT $2 OFFSET $3`;
     const values = [userId, limit, offset];
     
     const countQuery = `SELECT COUNT(*) FROM groups WHERE id IN (SELECT group_id FROM group_members WHERE user_id = $1)`;
@@ -65,6 +91,90 @@ const getAllGroupsForUser = async (client, userId, page, limit) => {
         }
     }
 }
+
+const getSuggestedGroups = async (client, userId, page, limit) => {
+    const offset = (page - 1) * limit;
+    
+    const query = `
+        SELECT
+            g.id,
+            g.community_id as "communityId",
+            g.name,
+            g.description,
+            g.rules,
+            g.cover_image as "coverImage",
+            g.logo,
+            g.is_public as "isPublic",
+            g.member_approval as "memberApprovalRequired",
+            g.post_approval as "postApprovalRequired",
+            g.created_at as "createdAt",
+            g.member_count as "memberCount"
+        FROM groups g
+        WHERE g.community_id IN (
+            SELECT community_id
+            FROM community_members
+            WHERE user_id = $1
+        )
+        AND g.id NOT IN (
+            SELECT group_id
+            FROM group_members
+            WHERE user_id = $1
+        )
+        AND g.id NOT IN (
+            SELECT group_id
+            FROM group_join_requests
+            WHERE user_id = $1 AND status = 'pending'
+        )
+        AND g.is_public = true
+        ORDER BY g.name
+        LIMIT $2 OFFSET $3
+    `;
+    
+    const countQuery = `
+        SELECT COUNT(*) as count
+        FROM groups g
+        WHERE g.community_id IN (
+            SELECT community_id
+            FROM community_members
+            WHERE user_id = $1
+        )
+        AND g.id NOT IN (
+            SELECT group_id
+            FROM group_members
+            WHERE user_id = $1
+        )
+        AND g.id NOT IN (
+            SELECT group_id
+            FROM group_join_requests
+            WHERE user_id = $1 AND status = 'pending'
+        )
+        AND g.is_public = true
+    `;
+    
+    const values = [userId, limit, offset];
+    
+    try {
+        const result = await client.query(query, values);
+        const countResult = await client.query(countQuery, [userId]);
+        
+        const totalGroups = parseInt(countResult.rows[0].count, 10);
+        const totalPages = Math.ceil(totalGroups / limit);
+        
+        return {
+            groups: result.rows,
+            meta: {
+                totalItems: totalGroups,
+                itemsPerPage: limit,
+                itemCount: result.rows.length,
+                currentPage: page,
+                totalPages: totalPages,
+            }
+        };
+    } catch (err) {
+        console.error('Error fetching suggested groups:', err);
+        throw CustomError.internalServerError('Failed to retrieve suggested groups');
+    }
+};
 
 const createGroup = async (client, groupData) => {
     const {
@@ -90,8 +200,9 @@ const createGroup = async (client, groupData) => {
                         member_approval, 
                         post_approval, 
                         community_id, 
-                        created_by
-                    ) VALUES ($1, $2,$3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`;
+                        created_by,
+                        member_count
+                    ) VALUES ($1, $2,$3, $4, $5, $6, $7, $8, $9, $10, 1) RETURNING *`;
     const values = [
                     name,
                     description,
@@ -279,7 +390,12 @@ const removeMemberFromGroup = async (client, groupId, userId) => {
     try {
         const result = await client.query(groupMemberQuery, values);
         const groupJoinRequestResult = await client.query(groupJoinRequestQuery, values);
-        return (result.rows.length > 0 && groupJoinRequestResult.rows.length > 0) || null;
+        
+        if (result.rows.length === 0 && groupJoinRequestResult.rows.length === 0) return null;
+        
+        await client.query("UPDATE groups SET member_count = member_count - 1 WHERE id = $1", [result.rows[0]["group_id"]]);
+        
+        return (result.rows.length > 0 && groupJoinRequestResult.rows.length > 0);
     } catch (err) {
         console.error('Error removing member from group', err);
         throw CustomError.internalServerError('Failed to remove member from group');
@@ -334,6 +450,8 @@ const leaveGroup = async (client, groupId, userId) => {
 
         const deleteMember = `DELETE FROM group_members WHERE group_id = $1 AND user_id = $2 RETURNING *`;
         delResult = await client.query(deleteMember, values);
+        
+        await client.query("UPDATE groups SET member_count = member_count - 1 WHERE id = $1", [result.rows[0]["group_id"]]);
     }
 
     return delResult.rows[0] || null;
@@ -371,8 +489,6 @@ const getGroupJoinRequests = async (client, page, limit, groupId) => {
         const countQuery = `SELECT COUNT(*) FROM group_join_requests WHERE group_id = $1`;
         const countResult = await client.query(countQuery, [groupId]);
 
-        console.log(result.rows);
-
         const totalRequests = parseInt(countResult.rows[0].count, 10);
         const totalPages = Math.ceil(totalRequests / limit);
 
@@ -400,15 +516,17 @@ const approveJoinRequest = async (client, requestId, approverId) => {
     try {
         const result = await client.query(approveQuery, values);
         if (result.rows.length === 0) return null;
-
-        console.log(result.rows);
+        
         // Query for adding the user as the member
         const memberQuery = `INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'member') RETURNING *`;
         const memberValues = [result.rows[0]["group_id"], result.rows[0]["user_id"]];
+        
+        
 
         const memberResult = await client.query(memberQuery, memberValues);
-        console.log(memberResult.rows);
         if (memberResult.rows.length === 0) return null;
+        
+        await client.query("UPDATE groups SET member_count = member_count + 1 WHERE id = $1", [result.rows[0]["group_id"]]);
 
         return memberResult.rows[0];
     } catch (err) {
@@ -442,6 +560,7 @@ const findGroupMemberById = async (client, groupId, memberId) => {
 module.exports = {
     getALlGroups,
     getAllGroupsForUser,
+    getSuggestedGroups,
     createGroup,
     findGroupByName,
     findGroupById,

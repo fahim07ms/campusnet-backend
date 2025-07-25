@@ -144,7 +144,20 @@ export const insertRefreshToken = async (
 // Find user by its verification token
 export const findUserByVerificationToken = async (client, token) => {
     const query =
-        "SELECT * FROM users WHERE verification_token = $1 AND is_verified = false";
+        `SELECT
+                u.id,
+                u.username,
+                u.email,
+                u.university_id as "universityId",
+                u.is_verified,
+                u.is_active,
+                up.first_name AS "firstName",
+                up.last_name AS "lastName",
+                univ.name AS "universityName"
+            FROM users u
+            LEFT JOIN user_profiles up ON u.id = u.id
+            LEFT JOIN universities univ ON u.id = univ.id
+            WHERE verification_token = $1 AND is_verified = false`;
     const result = await client.query(query, [token]);
     return result.rows[0] || null;
 };

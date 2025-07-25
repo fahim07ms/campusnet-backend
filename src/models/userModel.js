@@ -6,17 +6,17 @@ const getAllUsers = async (client, { page = 1, limit = 10 }) => {
     const query = {
         text: `
             SELECT
-                u.id,
+                u.id as "userId",
                 u.email,
                 u.username,
                 u.role,
-                u.is_verified,
-                u.is_active,
-                up.first_name,
-                up.last_name,
-                up.profile_picture,
+                u.is_verified as "isVerified",
+                u.is_active as "isActive",
+                up.first_name as "firstName",
+                up.last_name as "lastName",
+                up.profile_picture as "profilePicture",
                 up.bio,
-                un.name AS university_name
+                un.name as "universityName"
             FROM users u
             LEFT JOIN user_profiles up ON u.id = up.user_id
             LEFT JOIN universities un ON u.university_id = un.id
@@ -86,10 +86,12 @@ const getUserProfile = async (client, userId) => {
                 un.id AS "universityId",
                 un.name AS "universityName",
                 un.logo_url AS "universityLogoUrl",
-                un.country
+                un.country,
+                cm.community_id as "communityId"
             FROM users u
             LEFT JOIN user_profiles up ON u.id = up.user_id
             LEFT JOIN universities un ON u.university_id = un.id
+            LEFT JOIN community_members cm ON u.id = cm.user_id
             WHERE u.id = $1 -- Filter by user ID
         `,
         values: [userId],
@@ -146,10 +148,12 @@ const getUserById = async (client, userId) => {
                 un.id AS "universityId",
                 un.name AS "universityName",
                 un.logo_url AS "universityLogoUrl",
-                un.country
+                un.country,
+                cm.community_id as "communityId"
             FROM users u
             LEFT JOIN user_profiles up ON u.id = up.user_id
             LEFT JOIN universities un ON u.university_id = un.id
+            LEFT JOIN community_members cm ON u.id = cm.user_id
             WHERE id = $1
         `,
         values: [userId],
@@ -335,7 +339,7 @@ const addEducation = async (
     const query = {
         text: `
             INSERT INTO education (user_id, institution, degree, field_of_study, start_date, end_date)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING id, institution, degree, field_of_study, start_date, end_date
         `,
         values: [
@@ -410,7 +414,7 @@ const updateEducation = async (
     const query = {
         text: `
             UPDATE education
-            SET ${fields.join(", ")}, updated_at = NOW()
+            SET ${fields.join(", ")}
             WHERE id = $${paramIndex++} AND user_id = $${paramIndex}
             RETURNING id, university_name, degree, field_of_study, start_date, end_date, description
         `,
@@ -432,7 +436,7 @@ const updateEducation = async (
 const deleteEducation = async (client, userId, educationId) => {
     const query = {
         text: `
-            DELETE FROM user_education
+            DELETE FROM education
             WHERE id = $1 AND user_id = $2
             RETURNING id
         `,
@@ -454,10 +458,10 @@ const deleteEducation = async (client, userId, educationId) => {
 const getUserAchievements = async (client, userId) => {
     const query = {
         text: `
-            SELECT id, title, description, date_achieved, issued_by, credential_url
-            FROM user_achievements
+            SELECT id, title, description, achieved_at, issued_by
+            FROM achievements
             WHERE user_id = $1
-            ORDER BY date_achieved DESC
+            ORDER BY achieved_at DESC
         `,
         values: [userId],
     };
@@ -480,9 +484,9 @@ const addAchievement = async (
 ) => {
     const query = {
         text: `
-            INSERT INTO user_achievements (user_id, title, description, date_achieved, issued_by, credential_url)
+            INSERT INTO achievements (user_id, title, description, achieved_at, issued_by)
             VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id, title, description, date_achieved, issued_by, credential_url
+            RETURNING id, title, description, achieved_at, issued_by
         `,
         values: [
             userId,
@@ -490,7 +494,6 @@ const addAchievement = async (
             description,
             date_achieved,
             issued_by,
-            credential_url,
         ],
     };
 
@@ -543,8 +546,8 @@ const updateAchievement = async (
 
     const query = {
         text: `
-            UPDATE user_achievements
-            SET ${fields.join(", ")}, updated_at = NOW()
+            UPDATE achievements
+            SET ${fields.join(", ")}
             WHERE id = $${paramIndex++} AND user_id = $${paramIndex}
             RETURNING id, title, description, date_achieved, issued_by, credential_url
         `,
@@ -566,7 +569,7 @@ const updateAchievement = async (
 const deleteAchievement = async (client, userId, achievementId) => {
     const query = {
         text: `
-            DELETE FROM user_achievements
+            DELETE FROM achievements
             WHERE id = $1 AND user_id = $2
             RETURNING id
         `,
@@ -585,25 +588,25 @@ const deleteAchievement = async (client, userId, achievementId) => {
     }
 };
 
-const updateUserBloodGroup = async (client, userId, blood_group) => {
-    const query = {
-        text: `
-            UPDATE user_profiles
-            SET blood_group = $1, updated_at = NOW()
-            WHERE user_id = $2
-            RETURNING id, blood_group
-        `,
-        values: [blood_group, userId],
-    };
-
-    try {
-        const result = await client.query(query);
-        return result.rows[0];
-    } catch (err) {
-        console.error(`Error updating blood group for user ${userId}:`, err);
-        throw CustomError.internalServerError("Failed to update blood group");
-    }
-};
+// const updateUserBloodGroup = async (client, userId, blood_group) => {
+//     const query = {
+//         text: `
+//             UPDATE user_profiles
+//             SET blood_group = $1, updated_at = NOW()
+//             WHERE user_id = $2
+//             RETURNING id, blood_group
+//         `,
+//         values: [blood_group, userId],
+//     };
+//
+//     try {
+//         const result = await client.query(query);
+//         return result.rows[0];
+//     } catch (err) {
+//         console.error(`Error updating blood group for user ${userId}:`, err);
+//         throw CustomError.internalServerError("Failed to update blood group");
+//     }
+// };
 
 module.exports = {
     getAllUsers,
@@ -619,5 +622,5 @@ module.exports = {
     addAchievement,
     updateAchievement,
     deleteAchievement,
-    updateUserBloodGroup,
+    // updateUserBloodGroup,
 };

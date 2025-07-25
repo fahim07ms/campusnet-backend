@@ -10,6 +10,7 @@ const {
     refreshToken,
     logout,
 } = require("../controllers/authController");
+
 const { authMiddleware } = require("../middlewares/authMiddleware");
 
 router.post("/register", register);

@@ -635,6 +635,344 @@ const getSavedPosts = async (client, userId, { page = 1, limit = 10 }) => {
     }
 };
 
+/**
+ * Get personalized feed posts for authenticated user
+ * Shows:
+ * - All public posts
+ * - Private posts from communities/groups the user is a member of
+ */
+const getFeedPosts = async (client, userId, { page = 1, limit = 10, sortBy = 'recent' }) => {
+    const offset = (page - 1) * limit;
+    
+    // Build sort clause based on sortBy parameter
+    let orderClause;
+    switch (sortBy) {
+        case 'popular':
+            orderClause = `
+                CASE WHEN p.is_pinned THEN 0 ELSE 1 END,
+                CASE WHEN p.is_featured THEN 0 ELSE 1 END,
+                (COALESCE(reactions.reaction_count, 0) + COALESCE(comments.comment_count, 0)) DESC,
+                p.created_at DESC
+            `;
+            break;
+        case 'trending':
+            orderClause = `
+                CASE WHEN p.is_pinned THEN 0 ELSE 1 END,
+                CASE WHEN p.is_featured THEN 0 ELSE 1 END,
+                (
+                    (COALESCE(reactions.reaction_count, 0) + COALESCE(comments.comment_count, 0)) *
+                    EXP(-EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 86400.0)
+                ) DESC,
+                p.created_at DESC
+            `;
+            break;
+        case 'recent':
+        default:
+            orderClause = `
+                CASE WHEN p.is_pinned THEN 0 ELSE 1 END,
+                CASE WHEN p.is_featured THEN 0 ELSE 1 END,
+                p.created_at DESC
+            `;
+            break;
+    }
+    
+    const query = {
+        text: `
+            SELECT
+                p.*,
+                u.username as "authorUsername",
+                u.email,
+                up.first_name as "authorFirstName",
+                up.last_name as "authorLastName",
+                up.profile_picture as "authorProfilePicture",
+                univ.name as "authorUniversity",
+                univ.country as "authorUniversityCountry",
+                CASE
+                    WHEN p.community_id IS NOT NULL THEN comm.name
+                    WHEN p.group_id IS NOT NULL THEN grp.name
+                    ELSE NULL
+                END as "containerName",
+                CASE
+                    WHEN p.community_id IS NOT NULL THEN 'community'
+                    WHEN p.group_id IS NOT NULL THEN 'group'
+                    ELSE NULL
+                END as "containerType",
+                COALESCE(reactions.reactions_data, '[]'::json) as "reactions",
+                COALESCE(comments.comments_data, '[]'::json) as "comments",
+                COALESCE(reactions.reaction_count, 0) as "reactionCount",
+                COALESCE(comments.comment_count, 0) as "commentCount",
+                CASE WHEN sp.user_id IS NOT NULL THEN true ELSE false END as "isSaved"
+            FROM posts p
+            JOIN users u ON p.author_id = u.id
+            JOIN user_profiles up ON u.id = up.user_id
+            JOIN universities univ ON u.university_id = univ.id
+            LEFT JOIN communities comm ON p.community_id = comm.id
+            LEFT JOIN groups grp ON p.group_id = grp.id
+            LEFT JOIN saved_posts sp ON p.id = sp.post_id AND sp.user_id = $1
+            LEFT JOIN (
+                SELECT
+                    r.post_id,
+                    json_agg(
+                        json_build_object(
+                            'id', r.id,
+                            'reactionType', r.reaction_type,
+                            'userId', r.user_id,
+                            'username', ru.username,
+                            'firstName', rup.first_name,
+                            'lastName', rup.last_name
+                        )
+                    ) as reactions_data,
+                    COUNT(*) as reaction_count
+                FROM reactions r
+                JOIN users ru ON r.user_id = ru.id
+                JOIN user_profiles rup ON ru.id = rup.user_id
+                GROUP BY r.post_id
+            ) reactions ON p.id = reactions.post_id
+            LEFT JOIN (
+                SELECT
+                    c.post_id,
+                    json_agg(
+                        json_build_object(
+                            'id', c.id,
+                            'content', c.content,
+                            'authorId', c.author_id,
+                            'username', cu.username,
+                            'firstName', cup.first_name,
+                            'lastName', cup.last_name,
+                            'profilePicture', cup.profile_picture,
+                            'createdAt', c.created_at
+                        ) ORDER BY c.created_at DESC
+                    ) as comments_data,
+                    COUNT(*) as comment_count
+                FROM comments c
+                JOIN users cu ON c.author_id = cu.id
+                JOIN user_profiles cup ON cu.id = cup.user_id
+                GROUP BY c.post_id
+            ) comments ON p.id = comments.post_id
+            WHERE p.status = 'approved'
+            AND (
+                p.is_public = true
+                OR (
+                    p.is_public = false
+                    AND (
+                        (p.community_id IS NOT NULL AND EXISTS (
+                            SELECT 1 FROM community_members cm
+                            WHERE cm.community_id = p.community_id AND cm.user_id = $1
+                        ))
+                        OR
+                        (p.group_id IS NOT NULL AND EXISTS (
+                            SELECT 1 FROM group_members gm
+                            WHERE gm.group_id = p.group_id AND gm.user_id = $1
+                        ))
+                    )
+                )
+            )
+            ORDER BY ${orderClause}
+            LIMIT $2 OFFSET $3
+        `,
+        values: [userId, limit, offset]
+    };
+    
+    const countQuery = {
+        text: `
+            SELECT COUNT(*)
+            FROM posts p
+            WHERE p.status = 'approved'
+            AND (
+                p.is_public = true
+                OR (
+                    p.is_public = false
+                    AND (
+                        (p.community_id IS NOT NULL AND EXISTS (
+                            SELECT 1 FROM community_members cm
+                            WHERE cm.community_id = p.community_id AND cm.user_id = $1
+                        ))
+                        OR
+                        (p.group_id IS NOT NULL AND EXISTS (
+                            SELECT 1 FROM group_members gm
+                            WHERE gm.group_id = p.group_id AND gm.user_id = $1
+                        ))
+                    )
+                )
+            )
+        `,
+        values: [userId]
+    };
+    
+    try {
+        const result = await client.query(query);
+        const countResult = await client.query(countQuery);
+        
+        const totalPosts = parseInt(countResult.rows[0].count, 10);
+        const totalPages = Math.ceil(totalPosts / limit);
+        
+        return {
+            posts: result.rows,
+            meta: {
+                totalItems: totalPosts,
+                itemsPerPage: limit,
+                itemCount: result.rows.length,
+                currentPage: page,
+                totalPages: totalPages,
+                sortBy: sortBy
+            }
+        };
+    } catch (err) {
+        console.error("Error fetching feed posts:", err);
+        throw CustomError.internalServerError("Failed to retrieve feed posts");
+    }
+};
+
+/**
+ * Get public feed posts (only public posts)
+ */
+const getPublicFeedPosts = async (client, { page = 1, limit = 10, sortBy = 'recent' }) => {
+    const offset = (page - 1) * limit;
+    
+    // Build sort clause based on sortBy parameter
+    let orderClause;
+    switch (sortBy) {
+        case 'popular':
+            orderClause = `
+                CASE WHEN p.is_pinned THEN 0 ELSE 1 END,
+                CASE WHEN p.is_featured THEN 0 ELSE 1 END,
+                (COALESCE(reactions.reaction_count, 0) + COALESCE(comments.comment_count, 0)) DESC,
+                p.created_at DESC
+            `;
+            break;
+        case 'trending':
+            orderClause = `
+                CASE WHEN p.is_pinned THEN 0 ELSE 1 END,
+                CASE WHEN p.is_featured THEN 0 ELSE 1 END,
+                (
+                    (COALESCE(reactions.reaction_count, 0) + COALESCE(comments.comment_count, 0)) *
+                    EXP(-EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 86400.0)
+                ) DESC,
+                p.created_at DESC
+            `;
+            break;
+        case 'recent':
+        default:
+            orderClause = `
+                CASE WHEN p.is_pinned THEN 0 ELSE 1 END,
+                CASE WHEN p.is_featured THEN 0 ELSE 1 END,
+                p.created_at DESC
+            `;
+            break;
+    }
+    
+    const query = {
+        text: `
+            SELECT
+                p.*,
+                u.username as "authorUsername",
+                u.email,
+                up.first_name as "authorFirstName",
+                up.last_name as "authorLastName",
+                up.profile_picture as "authorProfilePicture",
+                univ.name as "authorUniversity",
+                univ.country as "authorUniversityCountry",
+                CASE
+                    WHEN p.community_id IS NOT NULL THEN comm.name
+                    WHEN p.group_id IS NOT NULL THEN grp.name
+                    ELSE NULL
+                END as "containerName",
+                CASE
+                    WHEN p.community_id IS NOT NULL THEN 'community'
+                    WHEN p.group_id IS NOT NULL THEN 'group'
+                    ELSE NULL
+                END as "containerType",
+                COALESCE(reactions.reactions_data, '[]'::json) as "reactions",
+                COALESCE(comments.comments_data, '[]'::json) as "comments",
+                COALESCE(reactions.reaction_count, 0) as "reactionCount",
+                COALESCE(comments.comment_count, 0) as "commentCount",
+                false as "isSaved"
+            FROM posts p
+            JOIN users u ON p.author_id = u.id
+            JOIN user_profiles up ON u.id = up.user_id
+            JOIN universities univ ON u.university_id = univ.id
+            LEFT JOIN communities comm ON p.community_id = comm.id
+            LEFT JOIN groups grp ON p.group_id = grp.id
+            LEFT JOIN (
+                SELECT
+                    r.post_id,
+                    json_agg(
+                        json_build_object(
+                            'id', r.id,
+                            'reactionType', r.reaction_type,
+                            'userId', r.user_id,
+                            'username', ru.username,
+                            'firstName', rup.first_name,
+                            'lastName', rup.last_name
+                        )
+                    ) as reactions_data,
+                    COUNT(*) as reaction_count
+                FROM reactions r
+                JOIN users ru ON r.user_id = ru.id
+                JOIN user_profiles rup ON ru.id = rup.user_id
+                GROUP BY r.post_id
+            ) reactions ON p.id = reactions.post_id
+            LEFT JOIN (
+                SELECT
+                    c.post_id,
+                    json_agg(
+                        json_build_object(
+                            'id', c.id,
+                            'content', c.content,
+                            'authorId', c.author_id,
+                            'username', cu.username,
+                            'firstName', cup.first_name,
+                            'lastName', cup.last_name,
+                            'profilePicture', cup.profile_picture,
+                            'createdAt', c.created_at
+                        ) ORDER BY c.created_at DESC
+                    ) as comments_data,
+                    COUNT(*) as comment_count
+                FROM comments c
+                JOIN users cu ON c.author_id = cu.id
+                JOIN user_profiles cup ON cu.id = cup.user_id
+                GROUP BY c.post_id
+            ) comments ON p.id = comments.post_id
+            WHERE p.status = 'approved' AND p.is_public = true
+            ORDER BY ${orderClause}
+            LIMIT $1 OFFSET $2
+        `,
+        values: [limit, offset]
+    };
+    
+    const countQuery = {
+        text: `
+            SELECT COUNT(*)
+            FROM posts p
+            WHERE p.status = 'approved' AND p.is_public = true
+        `,
+        values: []
+    };
+    
+    try {
+        const result = await client.query(query);
+        const countResult = await client.query(countQuery);
+        
+        const totalPosts = parseInt(countResult.rows[0].count, 10);
+        const totalPages = Math.ceil(totalPosts / limit);
+        
+        return {
+            posts: result.rows,
+            meta: {
+                totalItems: totalPosts,
+                itemsPerPage: limit,
+                itemCount: result.rows.length,
+                currentPage: page,
+                totalPages: totalPages,
+                sortBy: sortBy
+            }
+        };
+    } catch (err) {
+        console.error("Error fetching public feed posts:", err);
+        throw CustomError.internalServerError("Failed to retrieve public feed posts");
+    }
+};
+
 module.exports = {
     getAllPosts,
     getPostById,
@@ -647,5 +985,7 @@ module.exports = {
     toggleFeaturePost,
     savePost,
     unsavePost,
-    getSavedPosts
+    getSavedPosts,
+    getFeedPosts,
+    getPublicFeedPosts
 };
