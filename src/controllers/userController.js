@@ -2,6 +2,27 @@ const pool = require("../config/db.js");
 const UserModel = require("../models/userModel.js");
 const CustomError = require("../utils/errors.js");
 
+// Security imports
+const DOMPurify = require('isomorphic-dompurify');
+const sanitizeHtml = require('sanitize-html');
+const validator = require('validator');
+const bcrypt = require('bcrypt');
+const customError = require("../utils/errors");
+
+const basicSanitizeConfig = {
+    allowedTags: [],
+    allowedAttributes: {}
+};
+
+const sanitizeBasic = (input) => {
+    if (!input || typeof input !== 'string') return input;
+    let sanitized = sanitizeHtml(input, basicSanitizeConfig);
+    sanitized = DOMPurify.sanitize(sanitized);
+    return validator.trim(sanitized);
+};
+
+
+
 const getUsers = async (req, res, next) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
@@ -149,7 +170,39 @@ const updateMyPassword = async (req, res, next) => {
             ),
         );
     }
-
+    
+    if (typeof currentPassword !== 'string' || typeof newPassword !== 'string') {
+        return next(
+            CustomError.badRequest(
+                "Passwords must be strings.",
+            ),
+        );
+    }
+    
+    // Validate new password strength
+    if (newPassword.length < 8) {
+        return next(
+            CustomError.badRequest(
+                "New password must be at least 8 characters long.",
+            ),
+        );
+    }
+    
+    if (!validator.isStrongPassword(newPassword, {
+        minLength: 8,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1
+    })) {
+        return next(
+            CustomError.badRequest(
+                "Password must contain at least 1 uppercase, 1 lowercase, 1 number, and 1 special character.",
+            ),
+        );
+    }
+    
+    
     let client;
     try {
         client = await pool.connect();
@@ -158,19 +211,19 @@ const updateMyPassword = async (req, res, next) => {
         if (!user) {
             return next(CustomError.notFound("User not found."));
         }
-
-        // In a real application, you would hash the currentPassword and compare it with the stored hash
-        // For now, we'll do a simple comparison (replace with bcrypt.compare in production)
-        if (currentPassword !== user.password) {
-            // Assuming user.password is plain text for now, will be hashed in real app
+        
+        // Use bcrypt to compare passwords (assuming stored passwords are hashed)
+        const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isCurrentPasswordValid) {
             return next(
                 CustomError.unauthorized("Incorrect current password."),
             );
         }
-
-        // In a real application, you would hash the newPassword before storing it
-        const hashedPassword = newPassword; // Replace with bcrypt.hash in production
-
+        
+        // Hash new password
+        const saltRounds = 12;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+        
         await UserModel.updateUserPassword(client, userId, hashedPassword);
 
         res.status(200).json({
@@ -240,7 +293,7 @@ const getUserById = async (req, res, next) => {
 
 const updateMyProfile = async (req, res, next) => {
     const userId = req.userId;
-    const {
+    let {
         first_name,
         last_name,
         bio,
@@ -264,6 +317,85 @@ const updateMyProfile = async (req, res, next) => {
                 "Authentication required. User ID not found in request.",
             ),
         );
+    }
+    
+    // Sanitize string inputs
+    if (first_name) first_name = sanitizeBasic(first_name);
+    if (last_name) last_name = sanitizeBasic(last_name);
+    if (bio) bio = sanitizeBasic(bio);
+    if (department) department = sanitizeBasic(department);
+    if (address) address = sanitizeBasic(address);
+    if (student_id) student_id = sanitizeBasic(student_id);
+    
+    // Validate specific formats
+    if (phone && !validator.isMobilePhone(phone, 'any')) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid phone number format.",
+        }))
+    }
+    
+    if (birth_date !== null && !validator.isISO8601(birth_date)) {
+        console.log(birth_date);
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid birth date format.",
+        }))
+    }
+    
+    if (graduation_year && (!validator.isInt(graduation_year.toString(), { min: 1900, max: 2100 }))) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid graduation year format.",
+        }))
+    }
+    
+    if (profile_picture && !validator.isURL(profile_picture)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid profile picture URL.",
+        }))
+    }
+    
+    if (cover_photo && !validator.isURL(cover_photo)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid cover photo URL.",
+        }))
+    }
+    
+    if (university_id && !validator.isUUID(university_id, 4)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid university ID format.",
+        }))
+    }
+    
+    // Validate interests array
+    if (interests && !Array.isArray(interests)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Interests must be an array.",
+        }))
+    }
+    
+    if (interests) {
+        interests = interests.map(interest => sanitizeBasic(interest));
+    }
+    
+    // Validate boolean fields
+    if (profile_visibility_public !== undefined && typeof profile_visibility_public !== 'boolean') {
+        return next(CustomError.badRequest("profile_visibility_public must be a boolean."));
+    }
+    
+    if (connection_visibility_public !== undefined && typeof connection_visibility_public !== 'boolean') {
+        return next(CustomError.badRequest("connection_visibility_public must be a boolean."));
+    }
+    
+    // Length validations
+    if (first_name && first_name.length > 50) {
+        return next(CustomError.badRequest("First name too long."));
+    }
+    
+    if (last_name && last_name.length > 50) {
+        return next(CustomError.badRequest("Last name too long."));
+    }
+    
+    if (bio && bio.length > 500) {
+        return next(CustomError.badRequest("Bio too long. Maximum 500 characters."));
     }
 
     let client;
@@ -290,6 +422,7 @@ const updateMyProfile = async (req, res, next) => {
                 university_id,
             },
         );
+        console.log(updatedProfile);
 
         if (!updatedProfile) {
             return next(
@@ -304,19 +437,13 @@ const updateMyProfile = async (req, res, next) => {
             data: updatedProfile,
         });
     } catch (error) {
-        if (error.name && error.code) {
-            next(error);
-        } else {
-            console.error(
-                `Unexpected error in updateMyProfile controller for user ${userId}:`,
-                error,
-            );
-            next(
-                CustomError.internalServerError(
-                    "An unexpected error occurred while updating the profile.",
-                ),
-            );
-        }
+        console.log(error);
+        return res.status(500).json(customError.internalServerError({
+            message: "An unexpected error occurred while updating profile.",
+            details: {
+                error: error.message,
+            }
+        }));
     } finally {
         if (client) {
             client.release();
@@ -438,7 +565,6 @@ const updateMyEducation = async (req, res, next) => {
         field_of_study,
         start_date,
         end_date,
-        description,
     } = req.body;
 
     if (!userId) {
@@ -466,7 +592,6 @@ const updateMyEducation = async (req, res, next) => {
                 field_of_study,
                 start_date,
                 end_date,
-                description,
             },
         );
 

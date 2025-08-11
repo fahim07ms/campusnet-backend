@@ -348,8 +348,7 @@ const addEducation = async (
             degree,
             field_of_study,
             start_date,
-            end_date,
-            description,
+            end_date
         ],
     };
 
@@ -367,22 +366,16 @@ const updateEducation = async (
     userId,
     educationId,
     {
-        university_name,
         degree,
         field_of_study,
         start_date,
         end_date,
-        description,
     },
 ) => {
     const fields = [];
     const values = [];
     let paramIndex = 1;
-
-    if (university_name !== undefined) {
-        fields.push(`university_name = $${paramIndex++}`);
-        values.push(university_name);
-    }
+    
     if (degree !== undefined) {
         fields.push(`degree = $${paramIndex++}`);
         values.push(degree);
@@ -399,10 +392,6 @@ const updateEducation = async (
         fields.push(`end_date = $${paramIndex++}`);
         values.push(end_date);
     }
-    if (description !== undefined) {
-        fields.push(`description = $${paramIndex++}`);
-        values.push(description);
-    }
 
     if (fields.length === 0) {
         return null; // No fields to update
@@ -416,7 +405,7 @@ const updateEducation = async (
             UPDATE education
             SET ${fields.join(", ")}
             WHERE id = $${paramIndex++} AND user_id = $${paramIndex}
-            RETURNING id, university_name, degree, field_of_study, start_date, end_date, description
+            RETURNING id, degree, field_of_study, start_date, end_date
         `,
         values: values,
     };

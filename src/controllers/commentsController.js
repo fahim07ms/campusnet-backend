@@ -5,6 +5,37 @@ const CustomError = require('../utils/errors');
 const AuthModel = require("../models/authModel");
 const {userDataFromId} = require("../models/authModel");
 
+// Security imports
+const DOMPurify = require('isomorphic-dompurify');
+const sanitizeHtml = require('sanitize-html');
+const validator = require('validator');
+
+// Sanitization configurations
+const htmlSanitizeConfig = {
+    allowedTags: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a'],
+    allowedAttributes: {
+        'a': ['href']
+    },
+    allowedSchemes: ['http', 'https']
+};
+
+const sanitizeInput = (input) => {
+    if (!input || typeof input !== 'string') return input;
+    
+    // First sanitize HTML
+    let sanitized = sanitizeHtml(input, htmlSanitizeConfig);
+    
+    // Then use DOMPurify for additional XSS protection
+    sanitized = DOMPurify.sanitize(sanitized);
+    
+    // Normalize and trim
+    return validator.trim(sanitized);
+};
+
+const validateUUID = (id) => {
+    return validator.isUUID(id, 4);
+};
+
 const buildCommentTree = (comments) => {
     const map = {};
     const roots = [];
@@ -90,23 +121,56 @@ const createComment = async (req, res) => {
     const { postId } = req.params;
     const { eventId } = req.params;
     const { parentId } = req.body;
-    const { content } = req.body;
+    let { content } = req.body;
     const authorId = req.userId;
     
+    // Input validation and sanitization
+    if (!content || typeof content !== 'string') {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Content is required and must be a string."
+        }));
+    }
     
-
+    // Sanitize content
+    content = sanitizeInput(content);
+    
+    if (content.length > 5000) { // Reasonable limit
+        return res.status(400).json(CustomError.badRequest({
+            message: "Content too long. Maximum 5000 characters allowed."
+        }));
+    }
+    
+    if (!postId && !eventId && !parentId) {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Invalid request body. postId/eventId/parentId is required!"
+        }))
+    }
+    
+    // Validate UUIDs if provided
+    if (postId && !validateUUID(postId)) {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Invalid postId format."
+        }));
+    }
+    
+    if (eventId && !validateUUID(eventId)) {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Invalid eventId format."
+        }));
+    }
+    
+    if (parentId && !validateUUID(parentId)) {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Invalid parentId format."
+        }));
+    }
+    
     const commentData = {
         content,
         authorId,
         postId,
         eventId,
         parentId,
-    }
-
-    if (!postId && !eventId && !parentId) {
-        return res.status(400).json(CustomError.badRequest({
-            message: "Invalid request body. postId/eventId/parentId is required!"
-        }))
     }
 
     const client = await pool.connect();
@@ -161,8 +225,31 @@ const createComment = async (req, res) => {
 
 const updateComment = async (req, res) => {
     const { commentId } = req.params;
-    const { content } = req.body;
-
+    let { content } = req.body;
+    
+    // Validate commentId
+    if (!validateUUID(commentId)) {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Invalid commentId format."
+        }));
+    }
+    
+    // Validate and sanitize content
+    if (!content || typeof content !== 'string') {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Content is required and must be a string."
+        }));
+    }
+    
+    content = sanitizeInput(content);
+    
+    if (content.length > 5000) {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Content too long. Maximum 5000 characters allowed."
+        }));
+    }
+    
+    
     const client = await pool.connect();
     try {
         await client.query("BEGIN");

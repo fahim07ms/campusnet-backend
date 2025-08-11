@@ -255,12 +255,12 @@ const findGroupById = async (client, groupId) => {
                             g.name,
                             g.description,
                             g.rules,
-                            g.cover_image as coverImage,
+                            g.cover_image as "coverImage",
                             g.logo,
-                            g.is_public as isPublic,
-                            g.member_approval as memberApprovalRequired,
-                            g.post_approval as postApprovalRequired,
-                            g.created_at as createdAt
+                            g.is_public as "isPublic",
+                            g.member_approval as "memberApprovalRequired",
+                            g.post_approval as "postApprovalRequired",
+                            g.created_at as "createdAt"
                         FROM groups g
                         WHERE id = $1`;
     const values = [groupId];
@@ -405,25 +405,19 @@ const removeMemberFromGroup = async (client, groupId, userId) => {
 const joinGroup = async (client, groupId, userId) => {
     const query = `INSERT INTO group_join_requests (group_id, user_id) VALUES ($1, $2) RETURNING *`;
     const values = [groupId, userId];
-
-    try {
-        // Check if user is in the group's community
-        const checkUserInCommunity = `
-                        SELECT * 
-                        FROM community_members 
-                        WHERE user_id = $1 AND community_id = (SELECT community_id FROM groups WHERE id = $2)`;
-        const checkUserInCommunityValues = [userId, groupId];
-        const checkUserInCommunityResult = await client.query(checkUserInCommunity, checkUserInCommunityValues);
-        if (checkUserInCommunityResult.rows.length === 0) {
-            return null;
-        }
-
-        const result = await client.query(query, values);
-        return result.rows[0] || null;
-    } catch (error) {
-        console.error("Failed to send group join request");
-        throw CustomError.internalServerError("Failed to send group join request");
+    
+    const checkUserInCommunity = `
+                    SELECT *
+                    FROM community_members
+                    WHERE user_id = $1 AND community_id = (SELECT community_id FROM groups WHERE id = $2)`;
+    const checkUserInCommunityValues = [userId, groupId];
+    const checkUserInCommunityResult = await client.query(checkUserInCommunity, checkUserInCommunityValues);
+    if (checkUserInCommunityResult.rows.length === 0) {
+        return null;
     }
+
+    const result = await client.query(query, values);
+    return result.rows[0] || null;
 }
 
 const leaveGroup = async (client, groupId, userId) => {
@@ -557,6 +551,14 @@ const findGroupMemberById = async (client, groupId, memberId) => {
     return result.rows[0] || null;
 }
 
+const getUserRequestStatusById = async (client, groupId, userId) => {
+    const query = `SELECT status FROM group_join_requests WHERE group_id = $1 AND user_id = $2`;
+    const values = [groupId, userId];
+    
+    const result = await client.query(query, values);
+    return result.rows[0] || null;
+}
+
 module.exports = {
     getALlGroups,
     getAllGroupsForUser,
@@ -574,5 +576,6 @@ module.exports = {
     getGroupJoinRequests,
     approveJoinRequest,
     rejectJoinRequest,
-    findGroupMemberById
+    findGroupMemberById,
+    getUserRequestStatusById,
 }

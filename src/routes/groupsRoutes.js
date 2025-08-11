@@ -16,6 +16,7 @@ const {
     getAllMembers,
     updateMemberRole,
     removeMember,
+    getUserGroupRequest
 } = require("../controllers/groupsController");
 const {authMiddleware} = require("../middlewares/authMiddleware");
 const {groupModerator} = require("../middlewares/permissions");
@@ -38,12 +39,13 @@ router.post("/:groupId/leave", authMiddleware, leaveGroup);
 
 // Member Requests
 router.get("/:groupId/member-requests", authMiddleware, groupModerator, getAllMemberRequests);
+router.get("/:groupId/member-requests/status", authMiddleware, getUserGroupRequest);
 router.post("/:groupId/member-requests/:requestId/approve", authMiddleware, groupModerator, approveMemberRequest);
 router.post("/:groupId/member-requests/:requestId/reject", authMiddleware, groupModerator, rejectMemberRequest);
 
 // Events
 router.get("/:groupId/events", authMiddleware, getAllEvents);
-router.post("/:groupId/events", authMiddleware, createNewEvent);
+router.post("/:groupId/events", authMiddleware, createNewEvent)
 
 module.exports = {
     groupRoutes: router

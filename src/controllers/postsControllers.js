@@ -4,12 +4,88 @@ const PostsModel = require("../models/postsModel.js");
 const CustomError = require("../utils/errors.js");
 const { getPostReactions } = require("../models/reactionsModel.js");
 
+// Security imports
+const DOMPurify = require('isomorphic-dompurify');
+const sanitizeHtml = require('sanitize-html');
+const validator = require('validator');
+
+// Rich content sanitization for posts (more permissive)
+const postHtmlSanitizeConfig = {
+    allowedTags: [
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'p', 'br', 'hr',
+        'strong', 'b', 'em', 'i', 'u', 's',
+        'ol', 'ul', 'li',
+        'a', 'img',
+        'blockquote', 'pre', 'code'
+    ],
+    allowedAttributes: {
+        'a': ['href', 'target'],
+        'img': ['src', 'alt', 'width', 'height']
+    },
+    allowedSchemes: ['http', 'https'],
+    allowedSchemesByTag: {
+        'img': ['http', 'https', 'data']
+    }
+};
+
+// Sanitization configurations
+const htmlSanitizeConfig = {
+    allowedTags: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a'],
+    allowedAttributes: {
+        'a': ['href']
+    },
+    allowedSchemes: ['http', 'https']
+};
+
+const sanitizePostContent = (content) => {
+    if (!content || typeof content !== 'string') return content;
+    
+    let sanitized = sanitizeHtml(content, postHtmlSanitizeConfig);
+    sanitized = DOMPurify.sanitize(sanitized);
+    
+    return validator.trim(sanitized);
+};
+
+const sanitizeInput = (input) => {
+    if (!input || typeof input !== 'string') return input;
+    
+    // First sanitize HTML
+    let sanitized = sanitizeHtml(input, htmlSanitizeConfig);
+    
+    // use DOMPurify for additional XSS protection
+    sanitized = DOMPurify.sanitize(sanitized);
+    
+    // Normalize and trim
+    return validator.trim(sanitized);
+};
+
+
+const sanitizeArray = (arr) => {
+    if (!Array.isArray(arr)) return arr;
+    return arr.map(item => {
+        if (typeof item === 'string') {
+            return sanitizeInput(item);
+        }
+        return item;
+    });
+};
+
+const validateURLs = (urls) => {
+    if (!Array.isArray(urls)) return false;
+    return urls.every(url => validator.isURL(url, {
+        protocols: ['http', 'https'],
+        require_protocol: true
+    }));
+};
+
 /**
  * Get all posts with pagination and filtering
  */
 const getPosts = async (req, res, next) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
+    const { status } = req.query;
 
     const communityId = req.query.communityId;
     const groupId = req.query.groupId;
@@ -38,7 +114,7 @@ const getPosts = async (req, res, next) => {
             authorId,
             communityId,
             groupId,
-            status: "approved"
+            status: status || "approved"
         });
 
         res.status(200).json({
@@ -102,7 +178,7 @@ const getPostById = async (req, res, next) => {
  * Create a new post
  */
 const createPost = async (req, res, next) => {
-    const { content, communityId, groupId, images, links, isPublic } = req.body;
+    let { content, communityId, groupId, images, links, isPublic } = req.body;
     const authorId = req.userId;
 
     // Validate required fields
@@ -111,12 +187,87 @@ const createPost = async (req, res, next) => {
             message: "Content is required.",
         }))
     }
-
+    
+    // Sanitize content
+    content = sanitizePostContent(content);
+    
+    if (content.length > 10000) { // Higher limit for posts
+        return res.status(400).json(CustomError.badRequest({
+            message: "Content too long. Maximum 10,000 characters allowed."
+        }));
+    }
+    
     // Validate that either communityId or groupId is provided
     if (!communityId && !groupId) {
         return res.status(400).json(CustomError.badRequest({
             message: "Either communityId or groupId is required.",
         }))
+    }
+    
+    // Validate UUIDs
+    if (communityId && !validator.isUUID(communityId, 4)) {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Invalid communityId format."
+        }));
+    }
+    
+    if (groupId && !validator.isUUID(groupId, 4)) {
+        return res.status(400).json(CustomError.badRequest({
+            message: "Invalid groupId format."
+        }));
+    }
+    
+    // Sanitize and validate images array
+    if (images) {
+        if (!Array.isArray(images)) {
+            return res.status(400).json(CustomError.badRequest({
+                message: "Images must be an array."
+            }));
+        }
+        
+        if (images.length > 10) { // Reasonable limit
+            return res.status(400).json(CustomError.badRequest({
+                message: "Too many images. Maximum 10 allowed."
+            }));
+        }
+        
+        if (!validateURLs(images)) {
+            return res.status(400).json(CustomError.badRequest({
+                message: "Invalid image URLs provided."
+            }));
+        }
+        
+        images = sanitizeArray(images);
+    }
+    
+    // Sanitize and validate links array
+    if (links) {
+        if (!Array.isArray(links)) {
+            return res.status(400).json(CustomError.badRequest({
+                message: "Links must be an array."
+            }));
+        }
+        
+        if (links.length > 5) { // Reasonable limit
+            return res.status(400).json(CustomError.badRequest({
+                message: "Too many links. Maximum 5 allowed."
+            }));
+        }
+        
+        if (!validateURLs(links)) {
+            return res.status(400).json(CustomError.badRequest({
+                message: "Invalid URLs provided in links."
+            }));
+        }
+        
+        links = sanitizeArray(links);
+    }
+    
+    // Validate boolean
+    if (isPublic !== undefined && typeof isPublic !== 'boolean') {
+        return res.status(400).json(CustomError.badRequest({
+            message: "isPublic must be a boolean value."
+        }));
     }
 
     let client;

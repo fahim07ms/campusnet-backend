@@ -231,6 +231,6 @@ export const updateRefreshTokenLastUsed = async (client, refreshTokenHash) => {
         text: `UPDATE refresh_tokens SET last_used_at = now() WHERE token_hash = $1`,
         values: [refreshTokenHash],
     };
-    await client.query(query, [refreshTokenHash]);
+    await client.query(query);
 }
 

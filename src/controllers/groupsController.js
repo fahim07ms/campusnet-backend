@@ -307,7 +307,6 @@ const updateGroupData = async (req, res) => {
                 message: "No such group found.",
             }))
         }
-
         // Group update data
         const groupData = {
             groupId,
@@ -791,6 +790,44 @@ const rejectMemberRequest = async (req, res) => {
 
 }
 
+const getUserGroupRequest = async (req, res) => {
+    const { groupId } = req.params;
+    const userId = req.userId;
+    
+    if (!isValidUUID(groupId)) {
+        return res.status(400).json(customError.badRequest({
+            message: "Invalid groupId!",
+        }))
+    }
+    
+    let client;
+    try {
+        client = await pool.connect();
+        
+        const result = await GroupsModel.getUserRequestStatusById(client, groupId, userId);
+        if (result === null) {
+            return res.status(404).json(customError.notFound({
+                message: "No user found with such request"
+            }))
+        }
+        
+        return res.status(200).json({
+            message: "User status retrieved!",
+            data: {
+                status: result,
+            }
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(customError.internalServerError({
+            message: "Internal server error",
+            details: {
+                error: error.message,
+            }
+        }))
+    }
+}
+
 module.exports = {
     getAllGroups,
     getAllUserGroups,
@@ -807,4 +844,5 @@ module.exports = {
     getAllMembers,
     updateMemberRole,
     removeMember,
+    getUserGroupRequest
 }

@@ -262,6 +262,7 @@ const login = async (req, res) => {
             message: "Login successful",
             data: {
                 accessToken,
+                expiresIn: 900,
                 user: userData,
             },
         });
@@ -712,6 +713,7 @@ const refreshToken = async (req, res) => {
             message: "Token refreshed successfully",
             data: {
                 accessToken,
+                expiresIn: 900,
             },
         });
     } catch (error) {
